@@ -7,8 +7,9 @@ Special assigment for Communication Protocols at ITBA
 TODO
 ====
 
-* the proxy chaining is global or per client
+* (ask) the proxy chaining is global or per client
 * filter and transformations priorities
+* (ask) ip group restrictions by regex/pattern or just a list
 
 WISH LIST
 =========
