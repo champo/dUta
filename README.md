@@ -14,6 +14,7 @@ TODO
 * (ask) what is the expected behaviour when the content length is not present or fake and there is a too-big-request filter
         (save locally until maxium limit is reached, or redirect and drop "connection" when limit is exceded)
 * find out what is the criterion for defining the end of a request on a keep-alive connection
+* (ask) What's the correct status code to return after a filter blocked a request.
 
 WISH LIST
 =========
