@@ -22,6 +22,20 @@
         <url>https://github.com/champo/tpe-protos-2012/issues</url>
     </issueManagement>
 
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.16</version>
+        </dependency> 
+    </dependencies>
+
     <build>
         <plugins>
             <plugin>
