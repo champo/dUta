@@ -7,7 +7,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>dUta</name>
+    <name>दूत</name>
     <url>https://github.com/champo/tpe-protos-2012</url>
 
     <description>An HTTP proxy server, that can hide things from Palantirs.</description>
@@ -33,7 +33,7 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.16</version>
-        </dependency> 
+        </dependency>
     </dependencies>
 
     <build>
