@@ -7,7 +7,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>shroud</name>
+    <name>dUta</name>
     <url>https://github.com/champo/tpe-protos-2012</url>
 
     <description>An HTTP proxy server, that can hide things from Palantirs.</description>
