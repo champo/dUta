@@ -4,3 +4,11 @@
 *.jar
 *.war
 *.ear
+
+# Ignore maven generated files
+target
+
+# Ignore eclipse files
+.project
+.classpath
+.settings
