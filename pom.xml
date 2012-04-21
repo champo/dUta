@@ -8,18 +8,18 @@
     <packaging>jar</packaging>
 
     <name>दूत</name>
-    <url>https://github.com/champo/tpe-protos-2012</url>
+    <url>https://github.com/champo/dUta</url>
 
     <description>An HTTP proxy server, that can hide things from Palantirs.</description>
 
     <scm>
-        <developerConnection>scm:git:git@github.com:champo/tpe-protos-2012.git</developerConnection>
-        <url>http://github.com/champo/tpe-protos-2012</url>
+        <developerConnection>scm:git:git@github.com:champo/dUta.git</developerConnection>
+        <url>http://github.com/champo/dUta</url>
     </scm>
 
     <issueManagement>
         <system>Github Issue Tracker</system>
-        <url>https://github.com/champo/tpe-protos-2012/issues</url>
+        <url>https://github.com/champo/dUta/issues</url>
     </issueManagement>
 
     <dependencies>
