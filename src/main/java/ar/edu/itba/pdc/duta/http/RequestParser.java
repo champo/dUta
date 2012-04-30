@@ -38,7 +38,7 @@ public class RequestParser extends MessageParser {
 			}
 		}
 
-		if (scan.hasNext() || !Grammar.isRequestURI(requestURI) || !Grammar.isHTTPVersion(HTTPVersion)) {
+		if (scan.hasNext() || !Grammar.isHTTPVersion(HTTPVersion)) {
 			throw new Exception();
 		}
 	}

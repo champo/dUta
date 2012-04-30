@@ -29,10 +29,4 @@ public class Grammar {
 		
 		return Pattern.matches("HTTP/[0-9]+\\.[0-9]+", s);
 	}
-
-	public static boolean isRequestURI(String requestURI) {
-
-		// TODO
-		return true;
-	}
 }
