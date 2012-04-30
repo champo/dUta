@@ -1,45 +1,19 @@
 package ar.edu.itba.pdc.duta.http;
 
-import java.util.Scanner;
+import java.util.Map;
 
 
 public class RequestHeader extends MessageHeader {
 
 	private String method, requestURI, HTTPVersion;
 
-	@Override
-	void setStartLine(String s) throws Exception {
+	public RequestHeader(String method, String requestURI, String HTTPVersion, Map<String, String> fields) {
 
-		Scanner scan = new Scanner(s);
-		
-		if (!scan.hasNext()) {
-			throw new Exception();
-		}
-		method = scan.next();
-		
-		for (char c : method.toCharArray()) {
-			if (!Grammar.isTokenCharacter(c)) {
-				throw new Exception();
-			}
-		}
+		super(fields);
 
-		if (!scan.hasNext()) {
-			throw new Exception();
-		}
-		requestURI = scan.next();
-		// TODO: validate URI
-		
-		if (!scan.hasNext()) {
-			throw new Exception();
-		}
-		HTTPVersion = scan.next();
-		
-		if (!Grammar.isHTTPVersion(HTTPVersion)) {
-			throw new Exception();
-		}
-		if (scan.hasNext()) {
-			throw new Exception();
-		}
+		this.method = method;
+		this.requestURI = requestURI;
+		this.HTTPVersion = HTTPVersion;
 	}
 
 	public String getMethod() {

@@ -1,13 +1,15 @@
 package ar.edu.itba.pdc.duta.http;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public abstract class MessageHeader {
 
-	private Map<String, String> fields = new HashMap<String, String>();
+	private Map<String, String> fields;
 
-	abstract void setStartLine(String s) throws Exception;
+	protected MessageHeader(Map<String, String> fields) {
+		
+		this.fields = fields;
+	}
 
 	public String getField(String fieldName) {
 
@@ -17,23 +19,6 @@ public abstract class MessageHeader {
 	public Map<String, String> getFields() {
 	
 		return fields;
-	}
-	
-	void setField(String fieldName, String fieldValue) {
-		
-		if (fields.containsKey(fieldName)) {
-			fieldValue = fields.get(fieldName) + fieldValue;
-		}
-		
-		fields.put(fieldName, fieldValue);
-	}
-	
-	void trimValues() {
-
-		for(Map.Entry<String, String> field: fields.entrySet()) {
-
-			field.setValue(field.getValue().trim());
-		}
 	}
 
 	@Override

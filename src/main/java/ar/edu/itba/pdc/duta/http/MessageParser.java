@@ -1,6 +1,8 @@
 package ar.edu.itba.pdc.duta.http;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class MessageParser {
 
@@ -12,13 +14,15 @@ public abstract class MessageParser {
 	private States state;
 	private StringBuilder currString;
 	private String fieldName;
-	protected MessageHeader header;
+	protected Map<String, StringBuilder> fields;
 	
 	public MessageParser(ByteBuffer buffer) {
 
 		this.buffer = buffer;
 		this.state = States.START_LINE;
 		this.currString = new StringBuilder();
+		this.fieldName = null;
+		this.fields = new HashMap<String, StringBuilder>();
 	}
 
 	public boolean parse() throws Exception {
@@ -40,7 +44,7 @@ public abstract class MessageParser {
 						currString.setLength(0);
 						
 						if (s.length() > 0) {
-							header.setStartLine(s);
+							setStartLine(s);
 							state = States.BEGINNING_OF_LINE;
 						}
 						break;
@@ -87,6 +91,12 @@ public abstract class MessageParser {
 						if (fieldName.length() == 0) {
 							throw new Exception();
 						}
+						
+						if (fields.containsKey(fieldName)) {
+							fields.get(fieldName).append(", ");
+						} else {
+							fields.put(fieldName, new StringBuilder());
+						}
 						break;
 					}
 					break;
@@ -103,7 +113,7 @@ public abstract class MessageParser {
 							throw new Exception();
 						}
 
-						header.setField(fieldName, currString.toString());
+						fields.get(fieldName).append(' ').append(currString);
 						currString.setLength(0);
 						state = States.BEGINNING_OF_LINE;
 						break;
@@ -121,10 +131,23 @@ public abstract class MessageParser {
 		return state == States.END_OF_HEADER;
 	}
 	
+	protected abstract void setStartLine(String s) throws Exception;
+
+	protected abstract MessageHeader createHeader(Map<String, String> fields);
+	
 	public MessageHeader getHeader() {
 		
-		header.trimValues();
-		return header;
+		if (state != States.END_OF_HEADER) {
+			return null;
+		}
+
+		Map<String, String> fields = new HashMap<String, String>();
+
+		for (Map.Entry<String, StringBuilder> field : this.fields.entrySet()) {
+			fields.put(field.getKey(), field.getValue().toString().trim());
+		}
+
+		return createHeader(fields);
 	}
 }
 

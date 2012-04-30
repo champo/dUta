@@ -1,6 +1,6 @@
 package ar.edu.itba.pdc.duta.http;
 
-import java.util.Scanner;
+import java.util.Map;
 
 
 public class ResponseHeader extends MessageHeader {
@@ -8,31 +8,13 @@ public class ResponseHeader extends MessageHeader {
 	private String HTTPVersion, reasonPhrase;
 	private int statusCode;
 
-	@Override
-	void setStartLine(String s) throws Exception {
+	public ResponseHeader(String HTTPVersion, int statusCode, String reasonPhrase, Map<String, String> fields) {
 
-		Scanner scan = new Scanner(s);
-		
-		if (!scan.hasNext()) {
-			throw new Exception();
-		}
-		HTTPVersion = scan.next();
-		
-		if (!Grammar.isHTTPVersion(HTTPVersion)) {
-			throw new Exception();
-		}
-		if (!scan.hasNextInt()) {
-			throw new Exception();
-		}
-		statusCode = scan.nextInt();
-		
-		if (statusCode < 100 || statusCode > 999) {
-			throw new Exception();
-		}
-		if (!scan.hasNext()) {
-			throw new Exception();
-		}
-		reasonPhrase = scan.nextLine();
+		super(fields);
+	
+		this.HTTPVersion = HTTPVersion;
+		this.statusCode = statusCode;
+		this.reasonPhrase = reasonPhrase;
 	}
 
 	public String getHTTPVersion() {
