@@ -1,7 +1,7 @@
 package ar.edu.itba.pdc.duta.http;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
+
 
 public class Test {
 
@@ -35,19 +35,11 @@ public class Test {
 		parser = new RequestParser(ByteBuffer.wrap(request.getBytes("US-ASCII")));
 		while (!parser.parse());
 		
-		RequestHeader reqHeader = (RequestHeader) parser.getHeader();
-
-		for (Map.Entry<String, String> field : reqHeader.getFields().entrySet()) {
-			System.out.println(field.getKey() + ": " + field.getValue());
-		}
-
+		System.out.println(parser.getHeader());
+		
 		parser = new ResponseParser(ByteBuffer.wrap(response.getBytes("US-ASCII")));
 		while (!parser.parse());
-		
-		ResponseHeader respHeader = (ResponseHeader) parser.getHeader();
 
-		for (Map.Entry<String, String> field : respHeader.getFields().entrySet()) {
-			System.out.println(field.getKey() + ": " + field.getValue());
-		}
+		System.out.println(parser.getHeader());
 	}
 }

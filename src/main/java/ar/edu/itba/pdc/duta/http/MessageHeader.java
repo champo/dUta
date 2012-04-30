@@ -36,4 +36,23 @@ public abstract class MessageHeader {
 		}
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder res = new StringBuilder();
+		
+		res.append(getStartLine());
+		
+		for (Map.Entry<String, String> field : fields.entrySet()) {
+			res.append(field.getKey())
+				.append(": ")
+				.append(field.getValue())
+				.append("\r\n");
+		}
+		
+		res.append("\r\n");
+		
+		return res.toString();
+	}
+
+	protected abstract String getStartLine();
 }

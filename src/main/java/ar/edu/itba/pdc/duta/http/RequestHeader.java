@@ -2,6 +2,7 @@ package ar.edu.itba.pdc.duta.http;
 
 import java.util.Scanner;
 
+
 public class RequestHeader extends MessageHeader {
 
 	private String method, requestURI, HTTPVersion;
@@ -51,6 +52,11 @@ public class RequestHeader extends MessageHeader {
 
 	public String getHTTPVersion() {
 		return HTTPVersion;
+	}
+
+	@Override
+	protected String getStartLine() {
+		return method + " " + requestURI + " " + HTTPVersion + "\r\n";
 	}
 
 }

@@ -2,6 +2,7 @@ package ar.edu.itba.pdc.duta.http;
 
 import java.util.Scanner;
 
+
 public class ResponseHeader extends MessageHeader {
 
 	private String HTTPVersion, reasonPhrase;
@@ -44,6 +45,11 @@ public class ResponseHeader extends MessageHeader {
 
 	public int getStatusCode() {
 		return statusCode;
+	}
+
+	@Override
+	protected String getStartLine() {
+		return HTTPVersion + " " + statusCode + " " + reasonPhrase + "\r\n";
 	}
 
 }
