@@ -1,7 +1,6 @@
 package ar.edu.itba.pdc.duta.http;
 
 import java.nio.ByteBuffer;
-import org.apache.commons.lang3.text.WordUtils;
 
 public abstract class MessageParser {
 
@@ -81,7 +80,7 @@ public abstract class MessageParser {
 
 					if (c == ':') {
 
-						fieldName = WordUtils.capitalizeFully(currString.toString(), '-');
+						fieldName = currString.toString();
 						currString.setLength(0);
 						state = States.FIELD_VALUE;
 
