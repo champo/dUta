@@ -28,7 +28,7 @@ public class ResponseParser extends MessageParser {
 		try {
 			HTTPVersion = scan.next();
 			statusCode = scan.nextInt();
-			reasonPhrase = scan.nextLine().substring(1);
+			reasonPhrase = scan.nextLine().trim();
 		} catch (NoSuchElementException e) {
 			throw new Exception();
 		}
