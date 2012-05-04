@@ -117,5 +117,13 @@ public class Reactor implements Runnable {
 				key.selector().wakeup();
 			}
 		}
+
+		public void close() {
+			try {
+				key.channel().close();
+			} catch (IOException e) {
+				System.out.println("Failed to close channel.\n" + e);
+			}
+		}
 	}
 }

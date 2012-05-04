@@ -13,10 +13,18 @@ import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
+import proxy.RequestChannelHandler;
+
 @ThreadSafe
 public class Server {
-
+	
+	private static Server instance;
+	
 	private ReactorPool reactorPool;
+	
+	private Server() {
+		super();
+	}
 	
 	public void start() {
 		
@@ -51,25 +59,7 @@ public class Server {
 						ServerSocketChannel channel = (ServerSocketChannel) key.channel();
 						SocketChannel socket = channel.accept();
 						if (socket != null) {
-							
-							ChannelHandler handler = new AbstractChannelHandler() {
-								
-								@Override
-								public void read(SocketChannel channel) throws IOException {
-									
-									ByteBuffer readBuffer = ByteBuffer.allocate(1000);
-									int result = channel.read(readBuffer);
-									if (result == -1) {
-										channel.close();
-										return;
-									}
-
-									readBuffer.flip();
-									queueOutput(readBuffer);
-								}
-								
-							};
-							
+							ChannelHandler handler = new RequestChannelHandler();
 							getReactor().addChannel(socket, handler);
 						}
 					}
@@ -95,7 +85,16 @@ public class Server {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		new Server().start();
+		Server.run();
 		System.exit(0);
+	}
+
+	private static void run() {
+		instance = new Server();
+		instance.start();
+	}
+
+	public static void registerChannel(SocketChannel channel, ChannelHandler handler) throws IOException {
+		instance.getReactor().addChannel(channel, handler);
 	}
 }

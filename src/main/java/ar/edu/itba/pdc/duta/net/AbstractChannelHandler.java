@@ -3,21 +3,21 @@ package ar.edu.itba.pdc.duta.net;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import net.jcip.annotations.NotThreadSafe;
+import net.jcip.annotations.ThreadSafe;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 
-@NotThreadSafe
+@ThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
 	
-	private ReactorKey key;
+	protected ReactorKey key;
 	
 	private Queue<ByteBuffer> outputQueue;
 	
 	public AbstractChannelHandler() {
-		outputQueue = new LinkedList<ByteBuffer>();
+		outputQueue = new LinkedBlockingQueue<ByteBuffer>();
 		key = null;
 	}
 	

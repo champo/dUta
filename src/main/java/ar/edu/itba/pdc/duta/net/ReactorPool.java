@@ -14,7 +14,6 @@ public class ReactorPool {
 	
 	public ReactorPool(int count) throws IOException {
 		
-		
 		pool = new ArrayList<Pair>();
 		next = 0;
 		for (int i = 0; i < count; i++) {
