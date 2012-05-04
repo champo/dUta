@@ -46,8 +46,11 @@ public class Reactor implements Runnable {
 			try {
 				
 				guard.lock();
-				selector.select();
-				guard.unlock();
+				try {
+					selector.select();
+				} finally {
+					guard.unlock();
+				}
 				
 				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 				while (keys.hasNext()) {
@@ -76,10 +79,6 @@ public class Reactor implements Runnable {
 				
 			} catch (IOException e) {
 				e.printStackTrace();
-			} finally {
-				if (guard.isHeldByCurrentThread()) {
-					guard.unlock();
-				}
 			}
 		}
 	}
@@ -89,7 +88,7 @@ public class Reactor implements Runnable {
 		selector.wakeup();
 	}
 	
-	public class ReactorKey {
+	public static class ReactorKey {
 		
 		private SelectionKey key;
 		
