@@ -11,11 +11,9 @@ import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 
-import ar.edu.itba.pdc.duta.http.RequestParser;
-
 public class Server {
 
-	private Reactor reactor;
+	private ReactorPool reactorPool;
 	
 	public void start() {
 		
@@ -51,43 +49,20 @@ public class Server {
 						SocketChannel socket = channel.accept();
 						if (socket != null) {
 							
-							logger.info("Acception connection from " + socket.socket().getInetAddress());
-							ChannelHandler handler = new ChannelHandler() {
-								
-								private ByteBuffer readBuffer = ByteBuffer.allocate(1000);
-								
-								private RequestParser parser = null;
-								
-								@Override
-								public void write(SocketChannel channel) {
-								}
+							ChannelHandler handler = new AbstractChannelHandler() {
 								
 								@Override
 								public void read(SocketChannel channel) throws IOException {
-									readBuffer.mark();
+									
+									ByteBuffer readBuffer = ByteBuffer.allocate(1000);
 									int result = channel.read(readBuffer);
 									
 									if (result == -1) {
 										channel.close();
 									}
-									
-									readBuffer.reset();
-									
-									System.out.println(readBuffer);
-									
-									if (parser == null) {
-										parser = new RequestParser(readBuffer);
-									}
-									
-									try {
-										if (parser.parse()) {
-											System.out.println(parser.getHeader());
-										}
-									} catch (Exception e) {
-										channel.close();
-										e.printStackTrace();
-									}
-									
+
+									readBuffer.flip();
+									queueOutput(readBuffer);
 								}
 								
 							};
@@ -104,13 +79,12 @@ public class Server {
 	}
 	
 	private void runReactors() throws IOException {
-		//FIXME: Be able to kill the thread if something goes wrong
-		reactor = new Reactor();
-		new Thread(reactor).start();
+		int threads = 2 * Runtime.getRuntime().availableProcessors();
+		reactorPool = new ReactorPool(threads);
 	}
 
 	private Reactor getReactor() {
-		return reactor;
+		return reactorPool.get();
 	}
 	
 	public static void main(String[] args) throws IOException {

@@ -12,6 +12,8 @@ public class Reactor implements Runnable {
 	private Selector selector;
 	
 	private ReentrantLock guard;
+
+	private boolean run;
 	
 	public Reactor() throws IOException {
 		selector = Selector.open();
@@ -19,15 +21,18 @@ public class Reactor implements Runnable {
 	}
 
 	public void addChannel(SocketChannel socket, ChannelHandler handler) throws IOException {
-		socket.configureBlocking(false);
 
 		while (!guard.tryLock()) {
 			selector.wakeup();
 		}
 		
 		try {
+			socket.configureBlocking(false);
 			SelectionKey key = socket.register(selector, SelectionKey.OP_READ);
+			
+			// Link key and handler
 			key.attach(handler);
+			handler.setKey(new ReactorKey(key));
 		} finally {
 			guard.unlock();
 		}
@@ -36,7 +41,8 @@ public class Reactor implements Runnable {
 	@Override
 	public void run() {
 		
-		while (true) {
+		run = true;
+		while (run) {
 			try {
 				
 				guard.lock();
@@ -61,6 +67,10 @@ public class Reactor implements Runnable {
 					
 					if (!channel.isOpen()) {
 						key.cancel();
+						
+						// Remove the link between handler and key
+						key.attach(null);
+						handler.setKey(null);
 					}
 				}
 				
@@ -70,6 +80,38 @@ public class Reactor implements Runnable {
 				if (guard.isHeldByCurrentThread()) {
 					guard.unlock();
 				}
+			}
+		}
+	}
+	
+	public void stop() {
+		run = false;
+		selector.wakeup();
+	}
+	
+	public class ReactorKey {
+		
+		private SelectionKey key;
+		
+		private ReactorKey(SelectionKey key) {
+			this.key = key;
+		}
+		
+		public void setInterest(boolean read, boolean write) {
+			
+			int ops = 0;
+			
+			if (read) {
+				ops |= SelectionKey.OP_READ;
+			}
+			
+			if (write) {
+				ops |= SelectionKey.OP_WRITE;
+			}
+			
+			if (key.isValid()) {
+				key.interestOps(ops);
+				key.selector().wakeup();
 			}
 		}
 	}
