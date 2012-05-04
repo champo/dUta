@@ -1,11 +1,13 @@
-package ar.edu.itba.pdc.duta.http;
+package ar.edu.itba.pdc.duta.http.model;
 
 import java.util.Map;
 
 
 public class RequestHeader extends MessageHeader {
 
-	private String method, requestURI, HTTPVersion;
+	private String method;
+	private String requestURI;
+	private String HTTPVersion;
 
 	public RequestHeader(String method, String requestURI, String HTTPVersion, Map<String, String> fields) {
 

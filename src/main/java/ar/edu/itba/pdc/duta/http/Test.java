@@ -2,6 +2,10 @@ package ar.edu.itba.pdc.duta.http;
 
 import java.nio.ByteBuffer;
 
+import ar.edu.itba.pdc.duta.http.parser.MessageParser;
+import ar.edu.itba.pdc.duta.http.parser.RequestParser;
+import ar.edu.itba.pdc.duta.http.parser.ResponseParser;
+
 
 public class Test {
 

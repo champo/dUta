@@ -1,13 +1,19 @@
-package ar.edu.itba.pdc.duta.http;
+package ar.edu.itba.pdc.duta.http.parser;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import ar.edu.itba.pdc.duta.http.Grammar;
+import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.http.model.RequestHeader;
+
 public class RequestParser extends MessageParser {
 
-	private String method, requestURI, HTTPVersion;
+	private String method;
+	private String requestURI;
+	private String HTTPVersion;
 
 	public RequestParser(ByteBuffer buffer) {
 		super(buffer);

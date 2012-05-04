@@ -1,4 +1,4 @@
-package ar.edu.itba.pdc.duta.http;
+package ar.edu.itba.pdc.duta.http.model;
 
 import java.util.Map;
 
