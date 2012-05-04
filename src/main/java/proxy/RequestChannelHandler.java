@@ -56,7 +56,7 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 		if (header != null) {
 			SocketAddress remote = new InetSocketAddress(header.getField("Host"), 80);
 
-			header.setHeader("Connection", "close");
+			header.setField("Connection", "close");
 			SocketChannel outChannel = SocketChannel.open(remote);
 			ResponseChannelHandler response = new ResponseChannelHandler(this);
 			

@@ -41,7 +41,8 @@ public abstract class MessageHeader {
 
 	protected abstract String getStartLine();
 
-	public void setHeader(String field, String value) {
-		fields.put(field, value);
+	public void setField(String name, String value) {
+		
+		fields.put(name, value);
 	}
 }

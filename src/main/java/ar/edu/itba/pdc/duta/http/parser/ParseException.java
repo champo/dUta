@@ -37,9 +37,9 @@ public class ParseException extends Exception {
 		String msg = getLocalizedMessage();
 
 		if (msg == null) {
-			return this.getClass().getName() + " in line " + line;
+			return this.getClass().getName() + " at line " + line;
 		}
 
-		return this.getClass().getName() + " in line " + line + ": " + msg;
+		return this.getClass().getName() + " at line " + line + ": " + msg;
 	}
 }
