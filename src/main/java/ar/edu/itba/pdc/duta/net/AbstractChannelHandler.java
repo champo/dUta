@@ -6,8 +6,10 @@ import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import net.jcip.annotations.NotThreadSafe;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 
+@NotThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
 	
 	private ReactorKey key;
@@ -16,11 +18,14 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	
 	public AbstractChannelHandler() {
 		outputQueue = new LinkedList<ByteBuffer>();
+		key = null;
 	}
 	
 	public void queueOutput(ByteBuffer output) {
 		outputQueue.add(output);
-		key.setInterest(true, true);
+		if (key != null) {
+			key.setInterest(true, true);
+		}
 	}
 
 	@Override
@@ -57,6 +62,9 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	@Override
 	public void setKey(ReactorKey key) {
 		this.key = key;
+		if (key != null) {
+			key.setInterest(true, !outputQueue.isEmpty());
+		}
 	}
 	
 }

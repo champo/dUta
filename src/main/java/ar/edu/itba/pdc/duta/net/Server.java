@@ -9,8 +9,11 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 
+import net.jcip.annotations.ThreadSafe;
+
 import org.apache.log4j.Logger;
 
+@ThreadSafe
 public class Server {
 
 	private ReactorPool reactorPool;
@@ -76,6 +79,9 @@ public class Server {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		reactorPool.close();
+		reactorPool = null;
 	}
 	
 	private void runReactors() throws IOException {

@@ -7,6 +7,9 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.concurrent.locks.ReentrantLock;
 
+import net.jcip.annotations.ThreadSafe;
+
+@ThreadSafe
 public class Reactor implements Runnable {
 
 	private Selector selector;
@@ -88,6 +91,7 @@ public class Reactor implements Runnable {
 		selector.wakeup();
 	}
 	
+	@ThreadSafe
 	public static class ReactorKey {
 		
 		private SelectionKey key;
