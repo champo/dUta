@@ -4,8 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.text.WordUtils;
-
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 
@@ -90,7 +88,7 @@ public abstract class MessageParser {
 
 					if (c == ':') {
 
-						fieldName = WordUtils.capitalizeFully(currString.toString(), '-');
+						fieldName = currString.toString();
 						currString.setLength(0);
 						state = States.FIELD_VALUE;
 
