@@ -29,7 +29,13 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		while (!outputQueue.isEmpty()) {
 			
 			ByteBuffer buffer = outputQueue.peek();
-			channel.write(buffer);
+			try {
+				channel.write(buffer);
+			} catch (IOException e) {
+				// This should mean the pipe was broken. We bail in that case.
+				channel.close();
+				return;
+			}
 			
 			if (buffer.hasRemaining()) {
 				// If we didn't write the whole thing, the socket won't accept more
