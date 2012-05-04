@@ -1,6 +1,7 @@
 package ar.edu.itba.pdc.duta.http.parser;
 
 import java.nio.ByteBuffer;
+import java.util.InputMismatchException;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -26,20 +27,31 @@ public class ResponseParser extends MessageParser {
 	}
 
 	@Override
-	protected void setStartLine(String s) throws Exception{
+	protected void setStartLine(String s) throws ParseException{
 
 		Scanner scan = new Scanner(s);
 		
 		try {
 			HTTPVersion = scan.next();
 			statusCode = scan.nextInt();
+		} catch (InputMismatchException e) {
+			throw new ParseException("Invalid status code");
+		} catch (NoSuchElementException e) {
+			throw new ParseException("Invalid start line: missing parameters");
+		}
+
+		try {
 			reasonPhrase = scan.nextLine().trim();
 		} catch (NoSuchElementException e) {
-			throw new Exception();
+			reasonPhrase = "";
+		}
+
+		if (!Grammar.isHTTPVersion(HTTPVersion)){
+			throw new ParseException("Invalid HTTP version");
 		}
 		
-		if (!Grammar.isHTTPVersion(HTTPVersion) || statusCode < 100 || statusCode > 999) {
-			throw new Exception();
+		if (statusCode < 100 || statusCode > 999) {
+			throw new ParseException("Invalid status code");
 		}
 	}
 }

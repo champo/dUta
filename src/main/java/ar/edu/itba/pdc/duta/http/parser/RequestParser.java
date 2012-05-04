@@ -26,7 +26,7 @@ public class RequestParser extends MessageParser {
 	}
 
 	@Override
-	protected void setStartLine(String s) throws Exception{
+	protected void setStartLine(String s) throws ParseException{
 
 		Scanner scan = new Scanner(s);
 		
@@ -35,17 +35,21 @@ public class RequestParser extends MessageParser {
 			requestURI = scan.next();
 			HTTPVersion = scan.next();
 		} catch (NoSuchElementException e) {
-			throw new Exception();
+			throw new ParseException("Invalid start line: missing parameters");
 		}
 		
 		for (char c : method.toCharArray()) {
 			if (!Grammar.isTokenCharacter(c)) {
-				throw new Exception();
+				throw new ParseException("Invalid method");
 			}
 		}
 
-		if (scan.hasNext() || !Grammar.isHTTPVersion(HTTPVersion)) {
-			throw new Exception();
+		if (scan.hasNext()) {
+			throw new ParseException("Invalid start line: extra parameters");
+		}
+			
+		if (!Grammar.isHTTPVersion(HTTPVersion)) {
+			throw new ParseException("Invalid HTTP version");
 		}
 	}
 }

@@ -15,6 +15,7 @@ public abstract class MessageParser {
 
 	private ByteBuffer buffer;
 	private States state;
+	private int line;
 	private StringBuilder currString;
 	private String fieldName;
 	protected Map<String, StringBuilder> fields;
@@ -23,12 +24,13 @@ public abstract class MessageParser {
 
 		this.buffer = buffer;
 		this.state = States.START_LINE;
+		this.line = 0;
 		this.currString = new StringBuilder();
 		this.fieldName = null;
 		this.fields = new HashMap<String, StringBuilder>();
 	}
 
-	public boolean parse() throws Exception {
+	public boolean parse() throws ParseException {
 		
 		char oldc;
 		char c = '\0';
@@ -48,9 +50,15 @@ public abstract class MessageParser {
 						currString.setLength(0);
 						
 						if (s.length() > 0) {
-							setStartLine(s);
+							
+							try {
+								setStartLine(s);
+							} catch (ParseException e) {
+								throw new ParseException(e, line);
+							}
 							state = States.BEGINNING_OF_LINE;
 						}
+						line++;
 						break;
 					}
 					currString.append(c);
@@ -64,6 +72,7 @@ public abstract class MessageParser {
 							break;
 							
 						case '\n':
+							line++;
 							state = States.END_OF_HEADER;
 							break;
 							
@@ -81,7 +90,7 @@ public abstract class MessageParser {
 				case FIELD_NAME:
 
 					if (!Grammar.isTokenCharacter(oldc)) {
-						throw new Exception();
+						throw new ParseException("Invalid field name", line);
 					}
 
 					currString.append(oldc);
@@ -93,7 +102,7 @@ public abstract class MessageParser {
 						state = States.FIELD_VALUE;
 
 						if (fieldName.length() == 0) {
-							throw new Exception();
+							throw new ParseException("Missing field name", line);
 						}
 						
 						if (fields.containsKey(fieldName)) {
@@ -114,9 +123,10 @@ public abstract class MessageParser {
 					if (c == '\n') {
 						
 						if (fieldName == null) {
-							throw new Exception();
+							throw new ParseException("Missing field name", line);
 						}
 
+						line++;
 						fields.get(fieldName).append(' ').append(currString);
 						currString.setLength(0);
 						state = States.BEGINNING_OF_LINE;
@@ -124,7 +134,7 @@ public abstract class MessageParser {
 					}
 					
 					if (Grammar.isControlCharacter(c)) {
-						throw new Exception();
+						throw new ParseException("Invalid field value", line);
 					}
 					
 					currString.append(c);
@@ -135,7 +145,7 @@ public abstract class MessageParser {
 		return state == States.END_OF_HEADER;
 	}
 	
-	protected abstract void setStartLine(String s) throws Exception;
+	protected abstract void setStartLine(String s) throws ParseException;
 
 	protected abstract MessageHeader createHeader(Map<String, String> fields);
 	
