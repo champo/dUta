@@ -5,36 +5,43 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Reactor implements Runnable {
 
 	private Selector selector;
 	
-	private Object guard;
+	private ReentrantLock guard;
 	
 	public Reactor() throws IOException {
 		selector = Selector.open();
-		guard = new Object();
+		guard = new ReentrantLock();
 	}
 
 	public void addChannel(SocketChannel socket, ChannelHandler handler) throws IOException {
 		socket.configureBlocking(false);
-		synchronized (guard) {
+
+		while (!guard.tryLock()) {
 			selector.wakeup();
+		}
+		
+		try {
 			SelectionKey key = socket.register(selector, SelectionKey.OP_READ);
 			key.attach(handler);
+		} finally {
+			guard.unlock();
 		}
 	}
-
+	
 	@Override
 	public void run() {
 		
 		while (true) {
 			try {
-				synchronized (guard) {
-				}
 				
+				guard.lock();
 				selector.select();
+				guard.unlock();
 				
 				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 				while (keys.hasNext()) {
@@ -59,9 +66,11 @@ public class Reactor implements Runnable {
 				
 			} catch (IOException e) {
 				e.printStackTrace();
+			} finally {
+				if (guard.isHeldByCurrentThread()) {
+					guard.unlock();
+				}
 			}
 		}
 	}
-
-	
 }
