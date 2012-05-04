@@ -5,11 +5,6 @@ public class ParseException extends Exception {
 
 	int line = -1;
 
-	public ParseException() {
-		
-		super();
-	}
-
 	public ParseException(String msg) {
 		
 		super(msg);
@@ -30,5 +25,21 @@ public class ParseException extends Exception {
 	public int getLine() {
 
 		return line;
+	}
+	
+	@Override
+	public String toString() {
+		
+		if (line == -1) {
+			return super.toString();
+		}
+
+		String msg = getLocalizedMessage();
+
+		if (msg == null) {
+			return this.getClass().getName() + " in line " + line;
+		}
+
+		return this.getClass().getName() + " in line " + line + ": " + msg;
 	}
 }
