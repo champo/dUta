@@ -56,9 +56,9 @@ public class Server {
 									
 									ByteBuffer readBuffer = ByteBuffer.allocate(1000);
 									int result = channel.read(readBuffer);
-									
 									if (result == -1) {
 										channel.close();
+										return;
 									}
 
 									readBuffer.flip();
@@ -81,6 +81,7 @@ public class Server {
 	private void runReactors() throws IOException {
 		int threads = 2 * Runtime.getRuntime().availableProcessors();
 		reactorPool = new ReactorPool(threads);
+		reactorPool.start();
 	}
 
 	private Reactor getReactor() {

@@ -5,12 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReactorPool {
-	
+
 	private List<Pair> pool;
+	
+	private State state;
 	
 	private int next;
 	
 	public ReactorPool(int count) throws IOException {
+		
 		
 		pool = new ArrayList<Pair>();
 		next = 0;
@@ -18,16 +21,29 @@ public class ReactorPool {
 			
 			Pair pair = new Pair();
 			pair.reactor = new Reactor();
-			pair.thread = new Thread(pair.reactor);
-			pair.thread.start();
-			
 			pool.add(pair);
 		}
+		
+		state = State.READY;
+	}
+	
+	public void start() {
+		
+		if (state == State.CLOSED) {
+			throw new IllegalStateException("A reactor cant be started twice");
+		}
+		
+		for (Pair pair : pool) {
+			pair.thread = new Thread(pair.reactor);
+			pair.thread.start();
+		}
+		
+		state = State.RUNNING;
 	}
 	
 	public Reactor get() {
 		
-		if (pool.size() <= next) {
+		if (state != State.RUNNING || pool.size() <= next) {
 			return null;
 		}
 		
@@ -43,13 +59,19 @@ public class ReactorPool {
 
 	public void close() {
 		
+		state = State.CLOSED;
 		for (Pair pair : pool) {
 			pair.reactor.stop();
 		}
 	}
 	
-	private class Pair {
+	private static class Pair {
 		Reactor reactor;
 		Thread thread;
+	}
+	
+	private static enum State {
+		RUNNING, READY, CLOSED
+		
 	}
 }
