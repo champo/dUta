@@ -13,4 +13,6 @@ public interface ChannelHandler {
 
 	public void setKey(ReactorKey key);
 
+	public ReactorKey getKey();
+
 }

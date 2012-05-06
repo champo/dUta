@@ -7,24 +7,37 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import net.jcip.annotations.ThreadSafe;
+
+import org.apache.log4j.Logger;
+
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 
 @ThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
 	
+	private static Logger logger = Logger.getLogger(AbstractChannelHandler.class);
+	
 	protected ReactorKey key;
 	
 	private Queue<ByteBuffer> outputQueue;
+
+	protected boolean close = false;
+	
+	protected Object keyLock;
 	
 	public AbstractChannelHandler() {
 		outputQueue = new LinkedBlockingQueue<ByteBuffer>();
 		key = null;
+		keyLock = new Object();
 	}
 	
 	public void queueOutput(ByteBuffer output) {
 		outputQueue.add(output);
-		if (key != null) {
-			key.setInterest(true, true);
+		
+		synchronized (keyLock) {
+			if (key != null) {
+				key.setInterest(true, true);
+			}
 		}
 	}
 
@@ -37,8 +50,13 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			try {
 				channel.write(buffer);
 			} catch (IOException e) {
+				logger.warn("Writing to socket failed.", e);
+				System.err.println(e);
 				// This should mean the pipe was broken. We bail in that case.
-				channel.close();
+				
+				synchronized (keyLock) {
+					key.close();
+				}
 				return;
 			}
 			
@@ -51,8 +69,20 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		}
 		
 		if (outputQueue.isEmpty()) {
-			key.setInterest(true, false);
+			
+			synchronized (keyLock) {
+				key.setInterest(true, false);
+				
+				if (close) {
+					logger.debug("Closing...");
+					key.close();
+				}
+			}
 		}
+	}
+	
+	public boolean hasOutputQueued() {
+		return !outputQueue.isEmpty();
 	}
 
 	public ReactorKey getKey() {
@@ -61,9 +91,23 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	@Override
 	public void setKey(ReactorKey key) {
-		this.key = key;
-		if (key != null) {
-			key.setInterest(true, !outputQueue.isEmpty());
+
+		synchronized (keyLock) {
+			this.key = key;
+			if (key != null) {
+				key.setInterest(true, !outputQueue.isEmpty());
+			}
+		}
+	}
+
+	public void close() {
+		close = true;
+		
+		synchronized (keyLock) {
+			if (key != null && outputQueue.isEmpty()) {
+				logger.debug("Closed");
+				key.close();
+			}
 		}
 	}
 	

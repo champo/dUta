@@ -5,17 +5,24 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import net.jcip.annotations.ThreadSafe;
 
+import org.apache.log4j.Logger;
+
+import ar.edu.itba.pdc.duta.net.Server.Stats;
+
 @ThreadSafe
 public class Reactor implements Runnable {
 
+	private static Logger logger = Logger.getLogger(Reactor.class);
+	
 	private Selector selector;
 	
-	private ReentrantLock guard;
-
+	private Lock guard;
+	
 	private boolean run;
 	
 	public Reactor() throws IOException {
@@ -25,19 +32,18 @@ public class Reactor implements Runnable {
 
 	public void addChannel(SocketChannel socket, ChannelHandler handler) throws IOException {
 
-		while (!guard.tryLock()) {
+		synchronized (guard) {
 			selector.wakeup();
-		}
-		
-		try {
-			socket.configureBlocking(false);
-			SelectionKey key = socket.register(selector, SelectionKey.OP_READ);
 			
-			// Link key and handler
-			key.attach(handler);
+			socket.configureBlocking(false);
+			int ops = SelectionKey.OP_READ;
+			if (!socket.isConnected()) {
+				ops = SelectionKey.OP_CONNECT;
+			}
+			
+			socket.socket().setTcpNoDelay(true);
+			SelectionKey key = socket.register(selector, ops, handler);
 			handler.setKey(new ReactorKey(key));
-		} finally {
-			guard.unlock();
 		}
 	}
 	
@@ -47,13 +53,11 @@ public class Reactor implements Runnable {
 		run = true;
 		while (run) {
 			try {
-				
-				guard.lock();
-				try {
-					selector.select();
-				} finally {
-					guard.unlock();
+
+				synchronized (guard) {
 				}
+				Stats.log();
+				selector.select();
 				
 				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 				while (keys.hasNext()) {
@@ -63,6 +67,12 @@ public class Reactor implements Runnable {
 					SocketChannel channel = (SocketChannel) key.channel();
 					ChannelHandler handler = (ChannelHandler) key.attachment();
 					
+					if (key.isValid() && key.isConnectable()) {
+						channel.finishConnect();
+						handler.getKey().setCachedOps();
+						continue;
+					}
+					
 					if (key.isValid() && key.isReadable()) {
 						handler.read(channel);
 					}
@@ -71,17 +81,16 @@ public class Reactor implements Runnable {
 						handler.write(channel);
 					}
 					
-					if (!channel.isOpen()) {
-						key.cancel();
+					if (!key.isValid()) {
+						channel.close();
 						
 						// Remove the link between handler and key
 						key.attach(null);
-						handler.setKey(null);
 					}
 				}
-				
+
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.warn("Caught exception on the reactor run loop.", e);
 			}
 		}
 	}
@@ -92,38 +101,57 @@ public class Reactor implements Runnable {
 	}
 	
 	@ThreadSafe
-	public static class ReactorKey {
+	public class ReactorKey {
 		
 		private SelectionKey key;
+		
+		private int ops;
 		
 		private ReactorKey(SelectionKey key) {
 			this.key = key;
 		}
 		
-		public void setInterest(boolean read, boolean write) {
-			
-			int ops = 0;
-			
+		public synchronized void setInterest(boolean read, boolean write) {
+
+			ops = 0;
+
 			if (read) {
 				ops |= SelectionKey.OP_READ;
 			}
-			
+
 			if (write) {
 				ops |= SelectionKey.OP_WRITE;
 			}
-			
-			if (key.isValid()) {
+
+			SocketChannel channel = (SocketChannel) key.channel();
+			if (channel.isConnected() && key.isValid()) {
 				key.interestOps(ops);
-				key.selector().wakeup();
+				selector.wakeup();
 			}
 		}
+		
+		/**
+		 * Set the ops stored from the Handler.
+		 *
+		 * The Reactor may ignore the ops request by the handler.
+		 * In that case, those ops are stored and re set after by calling this method.
+		 */
+		protected synchronized void setCachedOps() {
+			
+			key.interestOps(ops);
+			selector.wakeup();
+		}
 
-		public void close() {
+		public synchronized void close() {
+			
+			key.cancel();
 			try {
 				key.channel().close();
 			} catch (IOException e) {
-				System.out.println("Failed to close channel.\n" + e);
+				logger.warn("Caught exception closing a channel.", e);
 			}
+			
+			selector.wakeup();
 		}
 	}
 }
