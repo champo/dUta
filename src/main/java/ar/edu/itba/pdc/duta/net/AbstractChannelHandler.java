@@ -14,23 +14,23 @@ import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 
 @ThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
-	
+
 	private static Logger logger = Logger.getLogger(AbstractChannelHandler.class);
-	
+
 	protected ReactorKey key;
-	
+
 	private Queue<ByteBuffer> outputQueue;
 
 	protected boolean close = false;
-	
+
 	protected Object keyLock;
-	
+
 	public AbstractChannelHandler() {
 		outputQueue = new LinkedBlockingQueue<ByteBuffer>();
 		key = null;
 		keyLock = new Object();
 	}
-	
+
 	public void queueOutput(ByteBuffer output) {
 		outputQueue.add(output);
 		
@@ -43,9 +43,9 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	@Override
 	public void write(SocketChannel channel) throws IOException {
-		
+
 		while (!outputQueue.isEmpty()) {
-			
+
 			ByteBuffer buffer = outputQueue.peek();
 			try {
 				channel.write(buffer);
@@ -59,7 +59,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 				}
 				return;
 			}
-			
+
 			if (buffer.hasRemaining()) {
 				// If we didn't write the whole thing, the socket won't accept more
 				break;
@@ -67,12 +67,12 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 				outputQueue.remove();
 			}
 		}
-		
+
 		if (outputQueue.isEmpty()) {
-			
+
 			synchronized (keyLock) {
 				key.setInterest(true, false);
-				
+
 				if (close) {
 					logger.debug("Closing...");
 					key.close();
@@ -80,7 +80,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			}
 		}
 	}
-	
+
 	public boolean hasOutputQueued() {
 		return !outputQueue.isEmpty();
 	}
@@ -102,7 +102,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	public void close() {
 		close = true;
-		
+
 		synchronized (keyLock) {
 			if (key != null && outputQueue.isEmpty()) {
 				logger.debug("Closed");
@@ -110,5 +110,5 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			}
 		}
 	}
-	
+
 }

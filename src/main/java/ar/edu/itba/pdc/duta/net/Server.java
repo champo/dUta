@@ -44,7 +44,7 @@ public class Server {
 		
 		try {
 			int port = 9999;
-			
+
 			Selector selector = Selector.open();
 			ServerSocketChannel serverChannel = selector.provider().openServerSocketChannel();
 			
