@@ -5,8 +5,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import net.jcip.annotations.ThreadSafe;
 
@@ -21,13 +19,13 @@ public class Reactor implements Runnable {
 	
 	private Selector selector;
 	
-	private Lock guard;
+	private Object guard;
 	
 	private boolean run;
 	
 	public Reactor() throws IOException {
 		selector = Selector.open();
-		guard = new ReentrantLock();
+		guard = new Object();
 	}
 
 	public void addChannel(SocketChannel socket, ChannelHandler handler) throws IOException {
