@@ -41,7 +41,6 @@ public class Reactor implements Runnable {
 				ops = SelectionKey.OP_CONNECT;
 			}
 			
-			socket.socket().setTcpNoDelay(true);
 			SelectionKey key = socket.register(selector, ops, handler);
 			handler.setKey(new ReactorKey(key));
 		}

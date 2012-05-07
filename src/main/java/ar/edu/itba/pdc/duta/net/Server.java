@@ -25,8 +25,6 @@ public class Server {
 	
 	private ReactorPool reactorPool;
 	
-	private SocketPool socketPool;
-	
 	private Server() {
 		super();
 	}
@@ -36,7 +34,6 @@ public class Server {
 		Logger logger = Logger.getLogger(Server.class);
 		try {
 			runReactors();
-			socketPool = new SocketPool(50, 150);
 		} catch (IOException e) {
 			logger.fatal("Failed to start Reactors", e);
 			return;
@@ -65,8 +62,11 @@ public class Server {
 						ServerSocketChannel channel = (ServerSocketChannel) key.channel();
 						SocketChannel socket = channel.accept();
 						if (socket != null) {
+							
 							Stats.newInbound();
 							ChannelHandler handler = new RequestChannelHandler();
+							
+							socket.socket().setTcpNoDelay(true);
 							getReactor().addChannel(socket, handler);
 							
 							Stats.log();
@@ -108,22 +108,15 @@ public class Server {
 	}
 
 	public static void newConnection(SocketAddress remote, ChannelHandler handler) throws IOException {
-		SocketChannel socket = instance.getSocket();
+		SocketChannel socket = SocketChannel.open();
 		
 		socket.configureBlocking(false);
+		socket.socket().setTcpNoDelay(true);
 		socket.connect(remote);
 		
 		registerChannel(socket, handler);
 	}
 
-	private SocketChannel getSocket() throws IOException {
-		return socketPool.get();
-	}
-
-	public static void addToPool(SocketChannel channel) {
-		instance.socketPool.put(channel);
-	}
-	
 	public static class Stats {
 		
 		private static final Logger logger = Logger.getLogger(Stats.class); 
