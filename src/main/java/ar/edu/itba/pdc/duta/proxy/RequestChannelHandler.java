@@ -19,7 +19,7 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 
 	private static Logger logger = Logger.getLogger(RequestChannelHandler.class);
 
-	private ByteBuffer inputBuffer = ByteBuffer.allocate(1000);
+	private ByteBuffer inputBuffer = ByteBuffer.allocate(8192);
 
 	private RequestParser parser;
 
@@ -54,13 +54,41 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 		MessageHeader header = parser.getHeader();
 		if (header != null) {
 			logger.debug("Got request, asking for responsee");
-			SocketAddress remote = new InetSocketAddress(header.getField("Host"), 80);
+			String host = header.getField("Host");
+			SocketAddress remote;
+			
+			//FIXME: These are proxy specific headers that make origin servers go boom, remove them in a clean way
+			header.removeField("Proxy-Connection");
+			header.removeField("Proxy-Authenticate");
+			header.removeField("Proxy-Authorization");
+			
+			if (host.contains(":")) {
+				String[] split = host.split(":");
+				
+				try {
+					remote = new InetSocketAddress(split[0], Integer.parseInt(split[1]));
+				} catch (NumberFormatException e) {
+					// Force close!
+					logger.error("Got an invalid port number in the Host header", e);
+					close();
+					return;
+				}
+			} else {				
+				remote = new InetSocketAddress(host, 80);
+			}
+			
 
 			header.setField("Connection", "close");
 			ResponseChannelHandler response = new ResponseChannelHandler(this);
 
-			Stats.newOutbound();
-			Server.newConnection(remote, response);
+			try {
+				Server.newConnection(remote, response);
+				Stats.newOutbound();
+			} catch (Exception e) {
+				logger.error("Caught exception trying to create outbound connection.", e);
+				close();
+				return;
+			}
 
 			String request = header.toString();
 			response.queueOutput(ByteBuffer.wrap(request.getBytes()));

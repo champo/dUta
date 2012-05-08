@@ -104,6 +104,12 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		close = true;
 
 		synchronized (keyLock) {
+			
+			if (key != null && !outputQueue.isEmpty()) {
+				//FIXME: Somehow, the correct value for the interest is lost sometimes
+				key.setInterest(true, true);
+			}
+			
 			if (key != null && outputQueue.isEmpty()) {
 				logger.debug("Closed");
 				key.close();

@@ -45,4 +45,8 @@ public abstract class MessageHeader {
 		
 		fields.put(name, value);
 	}
+	
+	public void removeField(String name) {
+		fields.remove(name);
+	}
 }

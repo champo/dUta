@@ -52,8 +52,8 @@ public class Reactor implements Runnable {
 			try {
 
 				synchronized (guard) {
+					Stats.log();
 				}
-				Stats.log();
 				selector.select();
 				
 				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
