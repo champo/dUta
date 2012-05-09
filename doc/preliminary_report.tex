@@ -65,11 +65,11 @@ De ser agregado correctamente, la respuesta tendra status code 201 y especificar
 En caso de encontrar un error con el mensaje enviado, se retornara un status code 400, y de ser posible, un mensaje que indique el error.
 
 \begin{verbatim}
-filter = 
-    ("{ 'type': " type ", 'apply': " apply "}") | 
+filter =
+    ("{ 'type': " type ", 'apply': " apply "}") |
     ("{ 'type': " type ", 'apply': " apply ", 'config': " config "}")
 
-type = 
+type =
     "'deny-all'" |
     "'deny-ip'" |
     "'deny-url'" |
@@ -80,11 +80,11 @@ type =
 
 apply = "[" apply-rules "]"
 
-apply-rules = 
+apply-rules =
     apply-rule |
     (apply-rule ", " apply-rules)
 
-apply-rule = 
+apply-rule =
     "{ 'host': " host-string "}" |
     "{ 'ua': " string "}"
 
@@ -154,7 +154,7 @@ Los recursos disponibles son:
         \item \awesome{8tracks} - \emph{``Handcrafted internet radio''}
         \item \awesome{curl} - Herramienta de transferencia de datos
         \item \awesome{netcat} - Utilidad para transferencia de datos por TCP y UDP
-        \item \awesome{Chromium} - Web browser
+        \item \awesome{Chromium} - Navegador web
     \end{itemize}
 
 \section{Casos de prueba}
@@ -170,13 +170,13 @@ Compraberemos que el proxy responde con el status code adecuado cuando recibe re
 Por ejemplo, \awesome{TRACE}.
 
 % Contra un server que sirva archivos grandes
-\subsection{Mensajes grandes}
+% \subsection{Mensajes grandes}
 % TODO: Write something
 
 \subsection{Throughtput}
 Para medir la capacidad del proxy, utilizaremos \awesome{JMeter}.
 El objetivo es obtener metricas como latencia y requests por segundo para una variedad de escenarios.
-Los escenarios tendran variaciones en: 
+Los escenarios tendran variaciones en:
 \begin{itemize}
     \item Requests totales
     \item Requests concurrentes
