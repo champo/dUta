@@ -97,28 +97,33 @@ Los valores \textit{deny-all}, \textit{l33t} y \textit{rotate} no deben incluir 
 \subsubsection{deny-ip}
 \begin{verbatim}
 config = [ host-list ]
-
 host-list = host-string | (host-string ", " host-list)
 \end{verbatim}
 
 \subsubsection{deny-url}
 \begin{verbatim}
 config = [ url-list ]
-
 url-list = uri | (uri ", " url-list)
-
 uri = string
 \end{verbatim}
 
 \subsubsection{deny-type}
+\begin{verbatim}
+config = [ mime-list ]
+mime-list = mime | (mime ", " mime-list)
+mime = string
+\end{verbatim}
 
 \subsubsection{deny-size}
-
+\begin{verbatim}
+config = size
+size = int
+\end{verbatim}
 
 \subsection{Remover filtros}
-/filter/id
-DELETE
+Para remover un filtro configurado, se debe enviar un request con metodo \textit{DELETE} y mensaje vacio al recurso asociado al filtro.
 
+\subsection{Monitoreo}
 /stats/stat-name
 GET
 \begin{verbatim}
