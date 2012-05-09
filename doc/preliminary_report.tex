@@ -38,6 +38,19 @@
 \end{itemize}
 
 \section{Diseño de los Protocolos}
+Quick & dirty
+/filter
+PUT 
+request = ("{ 'type': " type ", 'apply': " apply "}") | ("{ 'type': " type ", 'apply': " apply ", 'config': " config "}")
+type = "'deny-all'" | "'deny-ip'" | "'deny-url'" | "'deny-type'" | "'deny-size'" | "'l33t'" | "'rotate'"
+apply = "[" apply-rules "]"
+apply-rules = apply-rule | (apply-rule ", " apply-rules)
+apply-rule = "{ 'ip': " ip "}" | "{ 'ua': " ua "}" | "{ 'os': " os "}"
+response = "{ 'id': " integer " }"
+400 si es invalido el request por X motivo
+
+/filter/id
+DELETE
 
 \section{Analisis de los RFCs}
 
