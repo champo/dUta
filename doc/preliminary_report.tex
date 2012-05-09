@@ -13,7 +13,9 @@
 
 \begin{document}
 
-\newcommand{\awesome}[1]{\texttt{\large #1 -}}
+\newcommand{\awesome}[1]{\texttt{\large #1}}
+\newcommand{\ua}{\textit{User Agent} }
+\newcommand{\os}{\textit{Origin Server} }
 
 \maketitle
 \tableofcontents
@@ -23,15 +25,15 @@
 
 \begin{itemize}
 
-    \item \awesome{RFC 822}  Standard for the format of ARPA Internet text messages
-    \item \awesome{RFC 2119} Key words for use in RFCs to Indicate Requirement Levels
-    \item \awesome{RFC 2396} Uniform Resource Identifiers (URI): Generic Syntax
-    \item \awesome{RFC 1945} Hypertext Transfer Protocol -- HTTP/1.0
-    \item \awesome{RFC 2068} Hypertext Transfer Protocol -- HTTP/1.1
-    \item \awesome{RFC 2616} Hypertext Transfer Protocol -- HTTP/1.1
-    \item \awesome{RFC 2046} Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types
-    \item \awesome{RFC 2047} MIME (Multipurpose Internet Mail Extensions) Part Three: Message Header Extensions for Non-ASCII Text
-    \item \awesome{RFC 2324} Hyper Text Coffee Pot Control Protocol (HTCPCP/1.0)
+    \item \awesome{RFC 822}  - Standard for the format of ARPA Internet text messages
+    \item \awesome{RFC 2119} - Key words for use in RFCs to Indicate Requirement Levels
+    \item \awesome{RFC 2396} - Uniform Resource Identifiers (URI): Generic Syntax
+    \item \awesome{RFC 1945} - Hypertext Transfer Protocol -- HTTP/1.0
+    \item \awesome{RFC 2068} - Hypertext Transfer Protocol -- HTTP/1.1
+    \item \awesome{RFC 2616} - Hypertext Transfer Protocol -- HTTP/1.1
+    \item \awesome{RFC 2046} - Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types
+    \item \awesome{RFC 2047} - MIME (Multipurpose Internet Mail Extensions) Part Three: Message Header Extensions for Non-ASCII Text
+    \item \awesome{RFC 2324} - Hyper Text Coffee Pot Control Protocol (HTCPCP/1.0)
 
 \end{itemize}
 
@@ -39,17 +41,65 @@
 
 \section{Analisis de los RFCs}
 
-\section{Herramientas?}
+\section{Herramientas}
     Durante el desarrollo vamos a utilizar las siguientes herramientas:
     \begin{itemize}
-        \item \awesome{JMeter} Herramienta para benchmarking de aplicaciones
-        \item \awesome{Apache Bench} Herramienta de benchmarking para servidores HTTP
-        \item \awesome{nginx} Servidor HTTP
-        \item \awesome{8tracks} \emph{``Handcrafted internet radio''}
-        \item \awesome{curl} Herramienta de transferencia de datos
-        \item \awesome{Chromium} Web browser
+        \item \awesome{JMeter} - Herramienta para benchmarking de aplicaciones
+        \item \awesome{Apache Bench} - Herramienta de benchmarking para servidores HTTP
+        \item \awesome{nginx} - Servidor HTTP
+        \item \awesome{8tracks} - \emph{``Handcrafted internet radio''}
+        \item \awesome{curl} - Herramienta de transferencia de datos
+        \item \awesome{netcat} - Utilidad para transferencia de datos por TCP y UDP
+        \item \awesome{Chromium} - Web browser
     \end{itemize}
 
 \section{Casos de prueba}
+% Con netcat para mandar edge cases del formato de los headers
+\subsection{Headers con campos multilinea y con multiples valores}
+Usando la herramienta \awesome{netcat}, enviaremos requests que en sus headers contengan casos especiales.
+Uno de estos casos es tener un campo multilinea.
+El otro es tener multiples instancias de un mismo header, como por ejemplo \textit{Cookie}.
+
+% Con curl para mandar metodos no soportados (TRACE)
+\subsection{Requests invalidos}
+Compraberemos que el proxy responde con el status code adecuado cuando recibe requests con metodos que no soporta.
+Por ejemplo, \awesome{TRACE}.
+
+% Contra un server que sirva archivos grandes
+\subsection{Mensajes grandes}
+
+% Contra nginx para ver raw throughput
+% Contra google para ver throughput con red de por medio
+\subsection{Throughtput}
+Para medir la capacidad del proxy, utilizaremos \awesome{JMeter}.
+El objetivo es obtener metricas como latencia y requests por segundo para una variedad de escenarios.
+Los escenarios tendran variaciones en: 
+\begin{itemize}
+    \item Requests totales
+    \item Requests concurrentes
+    \item Servidor destino
+    \item Filtros y transformaciones aplicadas
+\end{itemize}
+
+% Transformaciones con archivos grandes, chunked y multipart
+\subsection{Transformaciones}
+
+\subsubsection{Transfer-Encoding}
+Ante una respuesta con \textit{Transfer-Encoding: chunked} una transformacion debe correctamente reconstruir el mensaje y luego aplicar la logica que corresponda.
+
+\subsubsection{Cache Headers}
+Podria ocurrir que el \os devuelva contenido con \textit{Cache headers} al que se aplica una transformacion en el proxy.
+Luego, la transformacion es desactivada y el \ua vuelve a pedir este contenido con un \awesome{GET} condicional.
+Si no se manipularon correctamente los headers de la respuesta original, el \os puede retornar un status code 304, haciendo que el \ua muestre contenido invalido.
+
+\subsubsection{Multipart MIMEs}
+El mensaje entregado por un \os puede ser del tipo \textit{multipart/*}.
+Este tipo de mensajes puede a su vez contener partes a las que apliquen transformaciones.
+Por lo tanto el proxy tiene que ser capaz de procesar estas partes individualmente y luego entregar un mensaje con todas ellas, sin perdida de informacion.
+
+\subsection{Filtros}
+% Filtro con multipart
+% Browsing con filtros varios
+% Contra un browser
 
 \end{document}
