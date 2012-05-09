@@ -43,26 +43,26 @@
 
 \section{Diseño de los Protocolos}
 Tomamos la sintaxis definida por el RFC 2616 en las secciones 2.1 ``Augmented BNF'' y 2.2 ``Basic Rules''.
-Tambien tomamos las definiciones de las secciones 2.5 ``Numbers'' y 2.6 ``Strings'' del RFC 4627.
-En caso de definciones conflictivas, se toma con mayor precendecia las definciones del RFC 4627.
+También tomamos las definiciones de las secciones 2.5 ``Numbers'' y 2.6 ``Strings'' del RFC 4627.
+En caso de definciones conflictivas, se toma con mayor precedencia las definiciones del RFC 4627.
 
-El protocolo de configuracion y monitoreo de \duta utiliza el protocolo HTTP 1.1 como transporte.
-El proxy presentara un servidor HTTP en un puerto distinto al 80, todavia sin determinar.
-La implementacion HTTP sera la misma que la utilizara el proxy para su funcion normal.
-Es decir, toda aquella funcionalidad HTTP 1.1 que el servidor proxy no soporte, no sera soportada por el servidor de configuracion.
+El protocolo de configuración y monitoreo de \duta utiliza el protocolo HTTP 1.1 como transporte.
+El proxy presentara un servidor HTTP en un puerto distinto al 80, todavía sin determinar.
+La implementación HTTP será la misma que la que utilizara el proxy para su función normal.
+Es decir, toda aquella funcionalidad HTTP 1.1 que el servidor proxy no soporte, no será soportada por el servidor de configuración.
 
-Los mensajes que recibe y envia este servidor seran con \textit{Content-Type: application/json}, como definido en el RFC 4627.
-Mediante el intercambio de mensajes se permitira cambiar la configuracion de \duta en tiempo de ejecucion y obtener metricas del comportamiento del mismo.
+Los mensajes que recibe y envía este servidor serán con \textit{Content-Type: application/json}, como definido en el RFC 4627.
+Mediante el intercambio de mensajes se permitirá cambiar la configuración de \duta en tiempo de ejecución y obtener métricas del comportamiento del mismo.
 
-Tambien se hara uso de la \textit{Basic Authentication Scheme} definida en el RFC 2617.
-El usuario y contraseña utilizados por este mecanismo seran determinados mediante un archivo de configuracion.
+También se hara uso de la \textit{Basic Authentication Scheme} definida en el RFC 2617.
+El usuario y contraseña utilizados por este mecanismo serán determinados mediante un archivo de configuración.
 
-Cualquier recurso o mensaje que no este detallado en la siguiente seccion, producira un status code de error correspondiente.
+Cualquier recurso o mensaje que no esté detallado en la siguiente sección, producirá un status code de error correspondiente.
 
 \subsection{Nuevo filtro}
 \label{sec:new-filter}
 Para configurar nuevos filtros se debe hacer un request \awesome{POST} al recurso \awesome{/filter} con un mensaje del formato \textit{filter}.
-De ser agregado correctamente, la respuesta tendra status code 201 y especificara mediante \textit{Location} el recurso asociado al nuevo filtro.
+De ser agregado correctamente, la respuesta tendrá status code 201 y especificará mediante \textit{Location} el recurso asociado al nuevo filtro.
 En caso de encontrar un error con el mensaje enviado, se retornara un status code 400, y de ser posible, un mensaje que indique el error.
 
 \begin{verbatim}
@@ -91,8 +91,8 @@ apply-rule =
 
 \end{verbatim}
 
-La definicion de \textit{host-string} es mixta.
-Debe respetar las reglas de \textit{string} definidas en el RFC 4627 y contener un valor valido segun el \textit{host} aceptado por el RFC 2616.
+La definición de \textit{host-string} es mixta.
+Debe respetar las reglas de \textit{string} definidas en el RFC 4627 y contener un valor válido según el \textit{host} aceptado por el RFC 2616.
 
 El contenido aceptado por \textit{config} y si debe ser omitido o no, es determinado por el valor de \textit{type}.
 Los valores \textit{deny-all}, \textit{l33t} y \textit{rotate} no deben incluir \textit{config}.
@@ -123,12 +123,12 @@ size = int
 \end{verbatim}
 
 \subsection{Remover filtros}
-Para remover un filtro configurado, se debe enviar un request con metodo \textit{DELETE} y mensaje vacio al recurso asociado al filtro.
+Para remover un filtro configurado, se debe enviar un request con método \textit{DELETE} y mensaje vacío al recurso asociado al filtro.
 
 \subsection{Monitoreo}
-Para obtener los valores de monitoreo, existira un recurso por cada posible categoria.
-Al enviar un request con metodo \awesome{GET}, el servidor respondara con el valor correspondiente.
-Los mensajes contenidos en las respuestas, todos tendran el mismo formato, \textit{value}.
+Para obtener los valores de monitoreo, existirá un recurso por cada posible categoría.
+Al enviar un request con método \awesome{GET}, el servidor responderá con el valor correspondiente.
+Los mensajes contenidos en las respuestas, todos tendrán el mismo formato, \textit{value}.
 \begin{verbatim}
 value = "{ 'value': " int "} "
 \end{verbatim}
@@ -168,7 +168,6 @@ de alguna manera (nótese que puede ser por filtros, y no solo por transformacio
 Si el mensaje está encriptado (header \textit{content-coding=gzip\textpipe compress\textpipe deflate\textpipe etc})
 y es necesario aplicarle alguna transformación, este deberá ser desencriptado, transformado y encriptado nuevamente.
 
-
 \section{Herramientas}
     Durante el desarrollo vamos a utilizar las siguientes herramientas:
     \begin{itemize}
@@ -183,14 +182,14 @@ y es necesario aplicarle alguna transformación, este deberá ser desencriptado,
 
 \section{Casos de prueba}
 % Con netcat para mandar edge cases del formato de los headers
-\subsection{Headers con campos multilinea y con multiples valores}
+\subsection{Headers con campos multilínea y con multiples valores}
 Usando la herramienta \awesome{netcat}, enviaremos requests que en sus headers contengan casos especiales.
-Uno de estos casos es tener un campo multilinea.
+Uno de estos casos es tener un campo multilínea.
 El otro es tener multiples instancias de un mismo header, como por ejemplo \textit{Cookie}.
 
-% Con curl para mandar metodos no soportados (TRACE)
-\subsection{Requests invalidos}
-Compraberemos que el proxy responde con el status code adecuado cuando recibe requests con metodos que no soporta.
+% Con curl para mandar métodos no soportados (TRACE)
+\subsection{Requests inválidos}
+Comprobaremos que el proxy responde con el status code adecuado cuando recibe requests con métodos que no soporta.
 Por ejemplo, \awesome{TRACE}.
 
 % Contra un server que sirva archivos grandes
@@ -199,8 +198,8 @@ Por ejemplo, \awesome{TRACE}.
 
 \subsection{Throughtput}
 Para medir la capacidad del proxy, utilizaremos \awesome{JMeter}.
-El objetivo es obtener metricas como latencia y requests por segundo para una variedad de escenarios.
-Los escenarios tendran variaciones en:
+El objetivo es obtener métricas como latencia y requests por segundo para una variedad de escenarios.
+Los escenarios tendrán variaciones en:
 \begin{itemize}
     \item Requests totales
     \item Requests concurrentes
@@ -212,17 +211,17 @@ Los escenarios tendran variaciones en:
 Consideramos como \textit{filtros} a las reglas de control de acceso y transformaciones que puede aplicar el proxy.
 
 \subsubsection{Transfer-Encoding}
-Ante una respuesta con \textit{Transfer-Encoding: chunked} un filtro debe correctamente reconstruir el mensaje y luego aplicar la logica que corresponda.
+Ante una respuesta con \textit{Transfer-Encoding: chunked} un filtro debe correctamente reconstruir el mensaje y luego aplicar la lógica que corresponda.
 
 \subsubsection{Cache Headers}
-Podria ocurrir que el \os devuelva contenido con \textit{Cache headers} al que se aplica un filtro en el proxy.
+Podría ocurrir que el \os devuelva contenido con \textit{Cache headers} al que se aplica un filtro en el proxy.
 Luego, el filtro es desactivado y el \ua vuelve a pedir este contenido con un \awesome{GET} condicional.
-Si no se manipularon correctamente los headers de la respuesta original, el \os puede retornar un status code 304, haciendo que el \ua muestre contenido invalido.
+Si no se manipularon correctamente los headers de la respuesta original, el \os puede retornar un status code 304, haciendo que el \ua muestre contenido inválido.
 
 \subsubsection{Multipart MIMEs}
 El mensaje entregado por un \os puede ser del tipo \textit{multipart/*}.
 Este tipo de mensajes puede a su vez contener partes a las que apliquen filtros.
-Por lo tanto el proxy tiene que ser capaz de procesar estas partes individualmente y luego entregar un mensaje con todas ellas, sin perdida de informacion.
+Por lo tanto el proxy tiene que ser capaz de procesar estas partes individualmente y luego entregar un mensaje con todas ellas, sin pérdida de información.
 
 % Da incluir algo sobre archivos grandes? No se como vamos a manejar esto, asi que me pa que no da.
 
