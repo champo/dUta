@@ -16,6 +16,7 @@
 \newcommand{\awesome}[1]{\texttt{\large #1}}
 \newcommand{\ua}{\textit{User Agent} }
 \newcommand{\os}{\textit{Origin Server} }
+\newcommand{\duta}{\awesome{dUta}}
 
 \maketitle
 \tableofcontents
@@ -34,31 +35,93 @@
     \item \awesome{RFC 2046} - Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types
     \item \awesome{RFC 2047} - MIME (Multipurpose Internet Mail Extensions) Part Three: Message Header Extensions for Non-ASCII Text
     \item \awesome{RFC 2324} - Hyper Text Coffee Pot Control Protocol (HTCPCP/1.0)
+    \item \awesome{RFC 4627} - The application/json Media Type for JavaScript Object Notation (JSON)
+    \item \awesome{RFC 2617} - HTTP Authentication: Basic and Digest Access Authentication
 
 \end{itemize}
 
 \section{Diseño de los Protocolos}
-\begin{verbatim}
-Quick \& dirty
-http digest auth
-/filter
-PUT 
-request = ("{ 'type': " type ", 'apply': " apply "}") | ("{ 'type': " type ", 'apply': " apply ", 'config': " config "}")
-type = "'deny-all'" | "'deny-ip'" | "'deny-url'" | "'deny-type'" | "'deny-size'" | "'l33t'" | "'rotate'"
-apply = "[" apply-rules "]"
-apply-rules = apply-rule | (apply-rule ", " apply-rules)
-apply-rule = "{ 'ip': " ip "}" | "{ 'browser': " browser "}" | "{ 'os': " os "}"
-ip = def formal
-browser = string browser name
-os = os name
-response = "{ 'id': " integer " }"
-400 si es invalido el request por X motivo
+Tomamos la sintaxis definida por el RFC 2616 en las secciones 2.1 ``Augmented BNF'' y 2.2 ``Basic Rules''.
+Tambien tomamos las definiciones de las secciones 2.5 ``Numbers'' y 2.6 ``Strings'' del RFC 4627.
+En caso de definciones conflictivas, se toma con mayor precendecia las definciones del RFC 4627.
 
+El protocolo de configuracion y monitoreo de \duta utiliza el protocolo HTTP 1.1 como transporte.
+El proxy presentara un servidor HTTP en un puerto distinto al 80, todavia sin determinar.
+La implementacion HTTP sera la misma que la utilizara el proxy para su funcion normal.
+Es decir, toda aquella funcionalidad HTTP 1.1 que el servidor proxy no soporte, no sera soportada por el servidor de configuracion.
+
+Los mensajes que recibe y envia este servidor seran con \textit{Content-Type: application/json}, como definido en el RFC 4627.
+Mediante el intercambio de mensajes se permitira cambiar la configuracion de \duta en tiempo de ejecucion y obtener metricas del comportamiento del mismo.
+
+Tambien se hara uso de la \textit{Basic Authentication Scheme} definida en el RFC 2617.
+El usuario y contraseña utilizados por este mecanismo seran determinados mediante un archivo de configuracion.
+
+Cualquier recurso o mensaje que no este detallado en la siguiente seccion, producira un status code de error correspondiente.
+
+\subsection{Nuevo filtro}
+Para configurar nuevos filtros se debe hacer un request \awesome{POST} al recurso \awesome{/filter} con un mensaje del formato \textit{filter}.
+De ser agregado correctamente, la respuesta tendra status code 201 y especificara mediante \textit{Location} el recurso asociado al nuevo filtro.
+En caso de encontrar un error con el mensaje enviado, se retornara un status code 400, y de ser posible, un mensaje que indique el error.
+
+\begin{verbatim}
+filter = 
+    ("{ 'type': " type ", 'apply': " apply "}") | 
+    ("{ 'type': " type ", 'apply': " apply ", 'config': " config "}")
+
+type = 
+    "'deny-all'" |
+    "'deny-ip'" |
+    "'deny-url'" |
+    "'deny-type'" |
+    "'deny-size'" |
+    "'l33t'" |
+    "'rotate'"
+
+apply = "[" apply-rules "]"
+
+apply-rules = 
+    apply-rule |
+    (apply-rule ", " apply-rules)
+
+apply-rule = 
+    "{ 'host': " host-string "}" |
+    "{ 'ua': " string "}"
+
+\end{verbatim}
+
+La definicion de \textit{host-string} es mixta.
+Debe respetar las reglas de \textit{string} definidas en el RFC 4627 y contener un valor valido segun el \textit{host} aceptado por el RFC 2616.
+
+El contenido aceptado por \textit{config} y si debe ser omitido o no, es determinado por el valor de \textit{type}.
+Los valores \textit{deny-all}, \textit{l33t} y \textit{rotate} no deben incluir \textit{config}.
+\subsubsection{deny-ip}
+\begin{verbatim}
+config = [ host-list ]
+
+host-list = host-string | (host-string ", " host-list)
+\end{verbatim}
+
+\subsubsection{deny-url}
+\begin{verbatim}
+config = [ url-list ]
+
+url-list = uri | (uri ", " url-list)
+
+uri = string
+\end{verbatim}
+
+\subsubsection{deny-type}
+
+\subsubsection{deny-size}
+
+
+\subsection{Remover filtros}
 /filter/id
 DELETE
 
 /stats/stat-name
 GET
+\begin{verbatim}
 {'value': valor} o si es JSON valido un int pelado, int pelado it is
 si stat-name === "filters"
 /stats/stat-name/filter-type
