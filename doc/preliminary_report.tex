@@ -59,6 +59,7 @@ El usuario y contraseña utilizados por este mecanismo seran determinados median
 Cualquier recurso o mensaje que no este detallado en la siguiente seccion, producira un status code de error correspondiente.
 
 \subsection{Nuevo filtro}
+\label{sec:new-filter}
 Para configurar nuevos filtros se debe hacer un request \awesome{POST} al recurso \awesome{/filter} con un mensaje del formato \textit{filter}.
 De ser agregado correctamente, la respuesta tendra status code 201 y especificara mediante \textit{Location} el recurso asociado al nuevo filtro.
 En caso de encontrar un error con el mensaje enviado, se retornara un status code 400, y de ser posible, un mensaje que indique el error.
@@ -124,14 +125,23 @@ size = int
 Para remover un filtro configurado, se debe enviar un request con metodo \textit{DELETE} y mensaje vacio al recurso asociado al filtro.
 
 \subsection{Monitoreo}
-/stats/stat-name
-GET
+Para obtener los valores de monitoreo, existira un recurso por cada posible categoria.
+Al enviar un request con metodo \awesome{GET}, el servidor respondara con el valor correspondiente.
+Los mensajes contenidos en las respuestas, todos tendran el mismo formato, \textit{value}.
 \begin{verbatim}
-{'value': valor} o si es JSON valido un int pelado, int pelado it is
-si stat-name === "filters"
-/stats/stat-name/filter-type
-misma respuesta que sin stat-name !== "filters"
+value = "{ 'value': " int "} "
 \end{verbatim}
+
+Los recursos disponibles son:
+\begin{itemize}
+    \item \textit{/stats/bytes}
+    \item \textit{/stats/bytes/clients}
+    \item \textit{/stats/bytes/servers}
+    \item \textit{/stats/filter/type} --- Donde \textit{type} es es el definido en \ref{sec:new-filter}.
+    \item \textit{/stats/channels}
+    \item \textit{/stats/channels/clients}
+    \item \textit{/stats/channels/servers}
+\end{itemize}
 
 \section{Analisis de los RFCs}
 
