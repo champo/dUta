@@ -8,7 +8,7 @@
 \usepackage{graphicx}
 \usepackage{tipa}
 
-\title{Preliminary Report}
+\title{Preliminary Report - dUta Proxy Server}
 \author{Civile, Juan \and Sneidermanis, Dario \and Kenny, Kevin}
 \date{9 de Mayo del 2012}
 
@@ -44,9 +44,9 @@
 \section{Diseño de los Protocolos}
 Tomamos la sintaxis definida por el RFC 2616 en las secciones 2.1 ``Augmented BNF'' y 2.2 ``Basic Rules''.
 También tomamos las definiciones de las secciones 2.5 ``Numbers'' y 2.6 ``Strings'' del RFC 4627.
-En caso de definciones conflictivas, se toma con mayor precedencia las definiciones del RFC 4627.
+En caso de definiciones conflictivas, se toma con mayor precedencia las definiciones del RFC 4627.
 
-El protocolo de configuración y monitoreo de \duta utiliza el protocolo HTTP 1.1 como transporte.
+El protocolo de configuración y monitoreo de \duta utilizara HTTP 1.1 como transporte.
 El proxy presentara un servidor HTTP en un puerto distinto al 80, todavía sin determinar.
 La implementación HTTP será la misma que la que utilizara el proxy para su función normal.
 Es decir, toda aquella funcionalidad HTTP 1.1 que el servidor proxy no soporte, no será soportada por el servidor de configuración.
@@ -94,7 +94,7 @@ apply-rule =
 La definición de \textit{host-string} es mixta.
 Debe respetar las reglas de \textit{string} definidas en el RFC 4627 y contener un valor válido según el \textit{host} aceptado por el RFC 2616.
 
-El contenido aceptado por \textit{config} y si debe ser omitido o no, es determinado por el valor de \textit{type}.
+El contenido aceptado por \textit{config} y si debe ser omitido o no, sera determinado por el valor de \textit{type}.
 Los valores \textit{deny-all}, \textit{l33t} y \textit{rotate} no deben incluir \textit{config}.
 \subsubsection{deny-ip}
 \begin{verbatim}
@@ -149,11 +149,11 @@ Algunos de los problemas encontrados en los RFCs relevantes son:
 
 \subsection{Multipart MIMEs}
 Un mismo mensaje puede contener distintos tipos de contenido, cada uno de los cuales
-puede tener aplicado un bloqueo y/o transformación diferente. Es decir, los bloqueo y transformaciones
+puede tener aplicado un bloqueo y/o transformación diferente. Es decir, los bloqueos y transformaciones
 no necesariamente son aplicados una sola vez por mensaje, ni afectan a todo el mensaje.
 
 \subsection{Mensajes muy grandes}
-Los mensajes pueden tener un tamaño ilimitado, y si sobre uno de ellos aplica una transformacion,
+Los mensajes pueden tener un tamaño ilimitado, y si sobre uno de ellos aplica una transformación,
 hay que guardar todo el mensaje antes de enviarlo al cliente.
 
 \subsection{Mensajes por partes (chunked)}
@@ -162,7 +162,7 @@ partes de un mensaje sean recibidas.
 
 \subsection{Headers sensibles al contenido del mensaje}
 Headers como \textit{content-length} y \textit{content-md5} tienen que ser recalculados si el contenido fue modificado
-de alguna manera (nótese que puede ser por bloqueos, y no solo por transformaciones, en mensajes con multipart MIMEs).
+de alguna manera.
 
 \subsection{Compresión de los mensajes}
 Si el mensaje está comprimido y es necesario aplicarle alguna transformación, este deberá ser descomprimido, transformado y comprimido nuevamente.
