@@ -6,6 +6,7 @@
 \usepackage{amssymb}
 \usepackage{makeidx}
 \usepackage{graphicx}
+\usepackage{tipa}
 
 \title{Preliminary Report}
 \author{Civile, Juan \and Sneidermanis, Dario \and Kenny, Kevin}
@@ -144,6 +145,29 @@ Los recursos disponibles son:
 \end{itemize}
 
 \section{Analisis de los RFCs}
+Algunos de los problemas encontrados en los RFCs relevantes son:
+
+\subsection{Multipart MIMEs}
+Un mismo mensaje puede contener distintos tipos de contenido, cada uno de los cuales
+puede ``matchear'' con un filtro y/o transformación diferente. Es decir, los filtros y transformaciones
+no necesariamente son aplicados una sola vez por archivo, ni afectan a todo el archivo.
+
+\subsection{Mensajes muy grandes}
+Los mensajes pueden tener un tamaño ilimitado, y dado que hay que ``cachearlos'', pueden haber problemas
+de memoria, requiriendo el uso de disco o alguna solución similar.
+
+\subsection{Mensajes por partes (chunked)}
+Al venir en partes, hace falta agregar una capa de lógica extra para poder esperar a que todas las
+partes de un mensaje sean recibidas.
+
+\subsection{Headers sensibles al contenido del mesaje}
+Headers como \textit{content-length} y \textit{content-md5} tienen que ser recalculados si el contenido fue modificado
+de alguna manera (nótese que puede ser por filtros, y no solo por transformaciones, en mensajes con multipart MIMEs).
+
+\subsection{Compresión de los mensajes}
+Si el mensaje está encriptado (header \textit{content-coding=gzip\textpipe compress\textpipe deflate\textpipe etc})
+y es necesario aplicarle alguna transformación, este deberá ser desencriptado, transformado y encriptado nuevamente.
+
 
 \section{Herramientas}
     Durante el desarrollo vamos a utilizar las siguientes herramientas:
