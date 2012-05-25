@@ -13,11 +13,12 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 
 	private static Logger logger = Logger.getLogger(ResponseChannelHandler.class);
 	
-	private RequestChannelHandler request;
+	private Operation op;
 	
-	public ResponseChannelHandler(RequestChannelHandler request) {
+	public ResponseChannelHandler(Operation operation) {
 		super();
-		this.request = request;
+		//FIXME: Refactor this class to allow for persistant connections
+		this.op = operation;
 	}
 
 	@Override
@@ -27,7 +28,7 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 			logger.debug("Got full response. Closing channels.");
 			
 			close();
-			request.close();
+			op.close();
 			
 			Stats.closeOutbound();
 			
@@ -36,7 +37,7 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 		
 		buffer.flip();
 		
-		request.queueOutput(buffer);
+		op.queueOutput(buffer);
 	}
 
 }
