@@ -30,4 +30,8 @@ public class RequestHeader extends MessageHeader {
 		return method + " " + requestURI + " " + HTTPVersion + "\r\n";
 	}
 
+	public void setRequestURI(String uri) {
+		requestURI = uri;
+	}
+
 }

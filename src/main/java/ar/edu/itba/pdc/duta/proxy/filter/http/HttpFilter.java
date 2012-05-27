@@ -1,9 +1,13 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.Interest;
@@ -57,6 +61,24 @@ public class HttpFilter implements Filter {
 			
 			//FIXME: This shouldn't be needed!
 			header.setField("Connection", "close");
+			
+			RequestHeader request = (RequestHeader) header;
+			
+			try {
+				URL url = new URL(request.getRequestURI());
+				if (header.getField("Host") == null) {
+					header.setField("Host", url.getHost());
+				} 
+				
+				String file = url.getFile();
+				if (file.isEmpty()) {
+					request.setRequestURI("/");
+				} else {
+					request.setRequestURI(file);
+				}
+			} catch (MalformedURLException e) {
+				// This is cool, I think
+			}
 			
 			return null;
 		}
