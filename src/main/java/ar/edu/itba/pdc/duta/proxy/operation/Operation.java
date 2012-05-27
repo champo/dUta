@@ -8,11 +8,13 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.http.model.Connection;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.http.parser.ResponseParser;
+import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
 import ar.edu.itba.pdc.duta.proxy.ResponseChannelHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
@@ -35,12 +37,20 @@ public class Operation {
 
 	private FilterChain responseChain;
 
+	private boolean closeResponse = false;
+	
+	private boolean closeRequest = false;
+	
+	private boolean sentResponse = false;
+
 	public Operation(RequestChannelHandler requestChannelHandler) {
 		requestChannel = requestChannelHandler;
 	}
 	
 	public void setRequestHeader(RequestHeader header, ByteBuffer buff) {
-		logger.debug("Setting request header");
+		
+		closeRequest = Connection.checkStatus(header) == Connection.CLOSE;
+		
 		buildFilterList(header);
 		
 		List<OperationFilter> requestFilters = new ArrayList<OperationFilter>();
@@ -52,8 +62,6 @@ public class Operation {
 			}
 		}
 		
-		logger.debug("Filter list for request: " + requestFilters);
-
 		InetSocketAddress address = extractAddress(header);
 		if (address == null) {
 			//TODO: Return a 500 error
@@ -132,9 +140,13 @@ public class Operation {
 	
 	public void close() {
 		
-		//FIXME: Handle soft close & force close (soft is keep connection, force is drop connection)
 		if (responseChannel != null) {
-			responseChannel.close();
+			if (closeResponse) { 
+				responseChannel.close();
+			} else {
+				Server.getConnectionPool().registerConnection(responseChannel);
+			}
+			
 		}
 		
 		if (responseChain != null) {
@@ -144,7 +156,7 @@ public class Operation {
 			}
 		}
 		
-		if (requestChannel != null) {
+		if (requestChannel != null && closeRequest) { 
 			requestChannel.close();
 		}
 		
@@ -166,11 +178,7 @@ public class Operation {
 		
 		if (responseChain == null) {
 		
-			logger.debug("Buffer content " + new String(buffer.array()));
-			
-			logger.debug("Pre parse buffer " + buffer);
 			ResponseParser parser = new ResponseParser(buffer);
-			logger.debug("Pre parse buffer " + buffer);
 			try {
 				parser.parse();
 			} catch (ParseException e) {
@@ -181,6 +189,8 @@ public class Operation {
 			}
 			
 			MessageHeader header = parser.getHeader();
+			closeResponse = Connection.checkStatus(header) == Connection.CLOSE;
+			
 			List<OperationFilter> responseFilters = new ArrayList<OperationFilter>();
 			
 			for (Filter filter : filters) {
@@ -199,7 +209,6 @@ public class Operation {
 			if (!responseChain.isMessageComplete() && buffer.hasRemaining()) {
 				buffer.compact();
 				buffer.flip();
-				logger.debug("Buffer content (after compact) " + new String(buffer.array()));
 			} else {
 				return;
 			}

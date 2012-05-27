@@ -1,6 +1,7 @@
 package ar.edu.itba.pdc.duta.net;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Queue;
@@ -25,10 +26,13 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	protected Object keyLock;
 
-	public AbstractChannelHandler() {
+	private SocketAddress address;
+
+	public AbstractChannelHandler(SocketAddress address) {
 		outputQueue = new LinkedBlockingQueue<ByteBuffer>();
 		key = null;
 		keyLock = new Object();
+		this.address = address;
 	}
 
 	@Override
@@ -99,6 +103,11 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 				key.setInterest(true, !outputQueue.isEmpty());
 			}
 		}
+	}
+	
+	@Override
+	public SocketAddress getAddress() {
+		return address;
 	}
 
 	public void close() {

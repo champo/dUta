@@ -33,7 +33,7 @@ public class HttpFilter implements Filter {
 		@Override
 		public Message processHeader(Operation op, MessageHeader header) {
 			header.setField("Via", "dUta");
-			header.setField("Connection", "close");
+			header.removeField("Connection");
 
 			return null;
 		}

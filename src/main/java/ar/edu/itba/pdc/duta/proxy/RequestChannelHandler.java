@@ -1,6 +1,7 @@
 package ar.edu.itba.pdc.duta.proxy;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
@@ -23,9 +24,9 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 	private RequestParser parser;
 
 	private Operation op;
-	
-	public RequestChannelHandler() {
-		super();
+
+	public RequestChannelHandler(SocketAddress address) {
+		super(address);
 	}
 
 	@Override
@@ -53,6 +54,7 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			op.addRequestData(inputBuffer);
 			
 			if (op.isRequestComplete()) {
+				logger.debug("Detaching operation from request");
 				// If it returned true, it means the request data should be complete
 				op = null;
 			}
@@ -80,6 +82,7 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			logger.debug("Have full header, creating op...");
 			logger.debug(header);
 			
+			parser = null;
 			op = new Operation(this);
 			op.setRequestHeader((RequestHeader) header, inputBuffer);
 			

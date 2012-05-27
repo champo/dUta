@@ -7,7 +7,6 @@ public class RequestHeader extends MessageHeader {
 
 	private String method;
 	private String requestURI;
-	private String HTTPVersion;
 
 	public RequestHeader(String method, String requestURI, String HTTPVersion, Map<String, String> fields) {
 
@@ -24,10 +23,6 @@ public class RequestHeader extends MessageHeader {
 
 	public String getRequestURI() {
 		return requestURI;
-	}
-
-	public String getHTTPVersion() {
-		return HTTPVersion;
 	}
 
 	@Override

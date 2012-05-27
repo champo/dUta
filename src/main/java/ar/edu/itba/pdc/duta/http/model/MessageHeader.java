@@ -5,6 +5,8 @@ import java.util.Map;
 public abstract class MessageHeader {
 
 	private Map<String, String> fields;
+	
+	protected String HTTPVersion;
 
 	protected MessageHeader(Map<String, String> fields) {
 		
@@ -37,6 +39,10 @@ public abstract class MessageHeader {
 		res.append("\r\n");
 		
 		return res.toString();
+	}
+	
+	public String getHTTPVersion() {
+		return HTTPVersion;
 	}
 
 	protected abstract String getStartLine();

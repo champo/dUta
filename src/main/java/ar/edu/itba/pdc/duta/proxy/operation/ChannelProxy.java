@@ -37,7 +37,7 @@ public class ChannelProxy implements OutputChannel {
 
 	private void openChannel() {
 		logger.debug("Opening channel...");
-		channel = Server.getResolver().getConnection(address);
+		channel = Server.getConnectionPool().getConnection(address);
 		channel.setOp(op);
 	}
 }

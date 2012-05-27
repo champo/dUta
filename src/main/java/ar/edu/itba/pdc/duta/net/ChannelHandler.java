@@ -1,6 +1,7 @@
 package ar.edu.itba.pdc.duta.net;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
@@ -15,4 +16,6 @@ public interface ChannelHandler extends OutputChannel {
 
 	public ReactorKey getKey();
 
+	public SocketAddress getAddress();
+	
 }

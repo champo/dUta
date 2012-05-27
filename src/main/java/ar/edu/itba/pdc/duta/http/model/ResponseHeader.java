@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class ResponseHeader extends MessageHeader {
 
-	private String HTTPVersion;
+	
 	private String reasonPhrase;
 	private int statusCode;
 
@@ -16,10 +16,6 @@ public class ResponseHeader extends MessageHeader {
 		this.HTTPVersion = HTTPVersion;
 		this.statusCode = statusCode;
 		this.reasonPhrase = reasonPhrase;
-	}
-
-	public String getHTTPVersion() {
-		return HTTPVersion;
 	}
 
 	public String getReasonPhrase() {

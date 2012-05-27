@@ -136,6 +136,7 @@ public class FilterChain {
 
 	private Message writeHeader() {
 		
+		logger.debug("Writing header " + msg.getHeader());
 		try {
 			outputChannel.queueOutput(ByteBuffer.wrap(msg.getHeader().toString().getBytes("ascii")));
 		} catch (UnsupportedEncodingException e) {

@@ -13,7 +13,7 @@ import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
-import ar.edu.itba.pdc.duta.proxy.ConnectionResolver;
+import ar.edu.itba.pdc.duta.proxy.ConnectionPool;
 import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
 
 
@@ -26,11 +26,11 @@ public class Server {
 	
 	private ReactorPool reactorPool;
 	
-	private ConnectionResolver resolver;
+	private ConnectionPool resolver;
 	
 	private Server() {
 		super();
-		resolver = new ConnectionResolver();
+		resolver = new ConnectionPool();
 	}
 	
 	public void start() {
@@ -68,7 +68,7 @@ public class Server {
 						if (socket != null) {
 							
 							Stats.newInbound();
-							ChannelHandler handler = new RequestChannelHandler();
+							ChannelHandler handler = new RequestChannelHandler(socket.getRemoteAddress());
 							
 							socket.socket().setTcpNoDelay(true);
 							getReactor().addChannel(socket, handler);
@@ -121,7 +121,7 @@ public class Server {
 		registerChannel(socket, handler);
 	}
 	
-	public static ConnectionResolver getResolver() {
+	public static ConnectionPool getConnectionPool() {
 		return instance.resolver;
 	}
 
