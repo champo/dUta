@@ -1,7 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
@@ -24,10 +23,6 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 	private RequestParser parser;
 
 	private Operation op;
-
-	public RequestChannelHandler(SocketAddress address) {
-		super(address);
-	}
 
 	@Override
 	public void read(SocketChannel channel) throws IOException {

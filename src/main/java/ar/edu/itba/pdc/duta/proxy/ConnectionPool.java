@@ -1,6 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy;
 
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,25 +15,27 @@ public class ConnectionPool {
 	
 	private static final Logger logger = Logger.getLogger(ConnectionPool.class);
 	
-	private Map<SocketAddress, Queue<ResponseChannelHandler>> pool;
+	private Map<String, Queue<ResponseChannelHandler>> pool;
 	
 	public ConnectionPool() {
 		super();
-		this.pool = new HashMap<SocketAddress, Queue<ResponseChannelHandler>>();
+		this.pool = new HashMap<String, Queue<ResponseChannelHandler>>();
 	}
 
-	public ResponseChannelHandler getConnection(SocketAddress remote) {
+	public ResponseChannelHandler getConnection(InetSocketAddress remote) {
 		
 		synchronized (pool) {
 			
-			Queue<ResponseChannelHandler> list = pool.get(remote);
+			String key = addressToKey(remote);
+			Queue<ResponseChannelHandler> list = pool.get(key);
 			if (list != null && list.size() > 0) {
 				
 				if (list.size() == 1) {
-					pool.remove(remote);
+					pool.remove(key);
 				}
+				logger.debug("Giving connection " + list.peek());
 				
-				return list.peek();
+				return list.poll();
 			}
 
 			return newConnection(remote);
@@ -46,27 +48,28 @@ public class ConnectionPool {
 		synchronized (pool) {
 			handler.setOp(null);
 			
-			SocketAddress addr = handler.getAddress();
-			Queue<ResponseChannelHandler> list = pool.get(addr);
+			String key = addressToKey(handler.getAddress());
+			Queue<ResponseChannelHandler> list = pool.get(key);
 			
 			if (list != null) {
 				
 				if (list.size() < 4) {
-					logger.debug("Storing connection to " + addr);
+					logger.debug("Storing connection to " + key);
 					list.add(handler);
 				}
 			} else {
 				list = new ArrayDeque<ResponseChannelHandler>(4);
 				list.add(handler);
-				logger.debug("Storing connection to " + addr);
+				logger.debug("Storing connection to " + key);
 				
-				pool.put(addr, list);
+				pool.put(key, list);
 			}
 		}
 	}
 	
-	private ResponseChannelHandler newConnection(SocketAddress remote) {
+	private ResponseChannelHandler newConnection(InetSocketAddress remote) {
 		
+		logger.debug("Boring new connection");
 		try {
 			ResponseChannelHandler response = new ResponseChannelHandler(remote);
 			
@@ -86,17 +89,20 @@ public class ConnectionPool {
 		synchronized (pool) {
 			handler.setOp(null);
 			
-			SocketAddress addr = handler.getAddress();
-			Queue<ResponseChannelHandler> list = pool.get(addr);
+			String key = addressToKey(handler.getAddress());
+			Queue<ResponseChannelHandler> list = pool.get(key);
 			
 			if (list != null) {
 				list.remove(handler);
 				
 				if (list.size() == 0) {
-					pool.remove(addr);
+					pool.remove(key);
 				}
 			}
 		}
 	}
-	
+
+	private String addressToKey(InetSocketAddress remote) {
+		return remote.getHostString() + ":" + remote.getPort();
+	}
 }

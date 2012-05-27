@@ -68,7 +68,7 @@ public class Server {
 						if (socket != null) {
 							
 							Stats.newInbound();
-							ChannelHandler handler = new RequestChannelHandler(socket.getRemoteAddress());
+							ChannelHandler handler = new RequestChannelHandler();
 							
 							socket.socket().setTcpNoDelay(true);
 							getReactor().addChannel(socket, handler);

@@ -1,7 +1,7 @@
 package ar.edu.itba.pdc.duta.proxy;
 
 import java.io.IOException;
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
@@ -18,8 +18,10 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 	
 	private Operation op;
 
-	public ResponseChannelHandler(SocketAddress address) {
-		super(address);
+	private InetSocketAddress address;
+
+	public ResponseChannelHandler(InetSocketAddress address) {
+		this.address = address;
 	}
 
 	public void setOp(Operation op) {
@@ -46,7 +48,13 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 		
 		buffer.flip();
 		
-		op.addResponseData(buffer);
+		if (op != null) {
+			op.addResponseData(buffer);
+		}
+	}
+
+	public InetSocketAddress getAddress() {
+		return address;
 	}
 
 }

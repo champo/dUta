@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
-import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 
 public class FilterChain {
@@ -25,12 +24,15 @@ public class FilterChain {
 
 	private boolean complete;
 	
+	private int bodySize;
+	
 	public FilterChain(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel) {
 		this.filters = filters;
 		this.msg = new Message(header);
 		this.outputChannel = outputChannel;
 		
 		complete = false;
+		bodySize = 0;
 		
 		for (OperationFilter filter : filters) {
 			logger.debug("Filter " + filter.part);
@@ -76,12 +78,31 @@ public class FilterChain {
 	}
 	
 	private void checkCompletion() {
-		//TODO: Implement proper logic
-		complete = msg.getHeader() instanceof RequestHeader;
+		
+		MessageHeader header = msg.getHeader();
+		
+		String length = header.getField("Content-Length");
+		String encoding = header.getField("Transfer-Encoding");
+
+		int len = 0;
+		try {
+			len = Integer.parseInt(length);
+		} catch (NumberFormatException e) {
+			len = -1;
+		}
+		
+		if (len != -1) {
+			complete = len <= bodySize;
+		} else if (encoding == null || encoding.isEmpty() || "identity".equals(encoding)) {
+			complete = true;
+		} else {
+			//TODO: Chuncked sucks
+		}
 	}
 
 	public Message append(Operation op, ByteBuffer buff) {
 		
+		bodySize += buff.remaining();
 		if (!needsBody) {
 			outputChannel.queueOutput(buff);
 		} else {
@@ -151,6 +172,7 @@ public class FilterChain {
 	}
 	
 	public boolean isMessageComplete() {
+		logger.debug("isMessageComplete " + (complete ? "true" : "false"));
 		return complete;
 	}
 

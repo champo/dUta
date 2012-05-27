@@ -40,4 +40,8 @@ public class ChannelProxy implements OutputChannel {
 		channel = Server.getConnectionPool().getConnection(address);
 		channel.setOp(op);
 	}
+	
+	public ResponseChannelHandler getChannel() {
+		return channel;
+	}
 }

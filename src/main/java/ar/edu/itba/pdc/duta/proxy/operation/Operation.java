@@ -16,7 +16,6 @@ import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.http.parser.ResponseParser;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
-import ar.edu.itba.pdc.duta.proxy.ResponseChannelHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
@@ -26,8 +25,6 @@ public class Operation {
 	private static final Logger logger = Logger.getLogger(Operation.class);
 
 	private RequestChannelHandler requestChannel;
-
-	private ResponseChannelHandler responseChannel;
 	
 	private List<Filter> filters;
 	
@@ -40,9 +37,9 @@ public class Operation {
 	private boolean closeResponse = false;
 	
 	private boolean closeRequest = false;
-	
-	private boolean sentResponse = false;
 
+	private ChannelProxy responseProxy;
+	
 	public Operation(RequestChannelHandler requestChannelHandler) {
 		requestChannel = requestChannelHandler;
 	}
@@ -70,8 +67,8 @@ public class Operation {
 		
 		logger.debug("Destination address: " + address);
 		
-		ChannelProxy proxy = new ChannelProxy(address, this);
-		requestChain = new FilterChain(header, requestFilters, proxy);
+		responseProxy = new ChannelProxy(address, this);
+		requestChain = new FilterChain(header, requestFilters, responseProxy);
 		
 		Message res = requestChain.processHeader(this);
 		if (res != null) {
@@ -140,25 +137,27 @@ public class Operation {
 	
 	public void close() {
 		
-		if (responseChannel != null) {
-			if (closeResponse) { 
-				responseChannel.close();
+		if (responseProxy != null && responseProxy.getChannel() != null) {
+			if (closeResponse) {
+				responseProxy.getChannel().close();
 			} else {
-				Server.getConnectionPool().registerConnection(responseChannel);
+				Server.getConnectionPool().registerConnection(responseProxy.getChannel());
 			}
-			
 		}
+		responseProxy = null;
 		
-		if (responseChain != null) {
+		if (responseChain != null && !responseChain.isMessageComplete()) {
 			Message res = responseChain.forceCompletion(this);
 			if (res != null) {
 				writeMessage(res);
 			}
 		}
+		responseChain = null;
 		
 		if (requestChannel != null && closeRequest) { 
 			requestChannel.close();
 		}
+		requestChannel = null;
 		
 		closed = true;
 	}
@@ -184,7 +183,10 @@ public class Operation {
 			} catch (ParseException e) {
 				logger.error("Failed to parse response header", e);
 				
+				//TODO: 500 out
 				close();
+				requestChannel.close();
+				
 				return;
 			}
 			
@@ -206,10 +208,11 @@ public class Operation {
 				writeMessage(res);
 			}
 			
-			if (!responseChain.isMessageComplete() && buffer.hasRemaining()) {
+			if (buffer.hasRemaining()) {
 				buffer.compact();
 				buffer.flip();
-			} else {
+			} else if (responseChain.isMessageComplete()) {
+				close();
 				return;
 			}
 			
@@ -218,6 +221,9 @@ public class Operation {
 		Message res = responseChain.append(this, buffer);
 		if (res != null) {
 			writeMessage(res);
+		} else if (responseChain.isMessageComplete()) {
+			close();
 		}
+		
 	}
 }

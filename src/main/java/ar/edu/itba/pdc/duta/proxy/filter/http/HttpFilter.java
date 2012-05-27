@@ -59,9 +59,6 @@ public class HttpFilter implements Filter {
 			header.removeField("Proxy-Authenticate");
 			header.removeField("Proxy-Authorization");
 			
-			//FIXME: This shouldn't be needed!
-			header.setField("Connection", "close");
-			
 			RequestHeader request = (RequestHeader) header;
 			
 			try {
