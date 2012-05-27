@@ -13,6 +13,7 @@ import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.proxy.ConnectionResolver;
 import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
 
 
@@ -25,8 +26,11 @@ public class Server {
 	
 	private ReactorPool reactorPool;
 	
+	private ConnectionResolver resolver;
+	
 	private Server() {
 		super();
+		resolver = new ConnectionResolver();
 	}
 	
 	public void start() {
@@ -115,6 +119,10 @@ public class Server {
 		socket.connect(remote);
 		
 		registerChannel(socket, handler);
+	}
+	
+	public static ConnectionResolver getResolver() {
+		return instance.resolver;
 	}
 
 	public static class Stats {

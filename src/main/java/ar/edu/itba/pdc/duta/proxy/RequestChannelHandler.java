@@ -12,6 +12,7 @@ import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.net.AbstractChannelHandler;
 import ar.edu.itba.pdc.duta.net.Server.Stats;
+import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 public class RequestChannelHandler extends AbstractChannelHandler {
 
@@ -45,8 +46,6 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 		inputBuffer.reset();
 		inputBuffer.limit(pos);
 		
-
-		
 		if (op == null) {
 			processHeader();
 		} else {
@@ -75,18 +74,22 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			close();
 			return;
 		}
-		inputBuffer.limit(inputBuffer.capacity());
 
 		MessageHeader header = parser.getHeader();
 		if (header != null) {
+			logger.debug("Have full header, creating op...");
+			logger.debug(header);
+			
 			op = new Operation(this);
-			op.setRequestHeader((RequestHeader) header);
+			op.setRequestHeader((RequestHeader) header, inputBuffer);
 			
 			if (op.isRequestComplete()) {
 				// If it returned true, it means the request data should be complete
 				op = null;
 			}
 		}
+		
+		inputBuffer.limit(inputBuffer.capacity());
 	}
 
 	@Override

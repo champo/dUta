@@ -5,12 +5,12 @@ import java.nio.channels.SocketChannel;
 
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 
-public interface ChannelHandler {
+public interface ChannelHandler extends OutputChannel {
 
 	public void read(SocketChannel channel) throws IOException;
 
 	public void write(SocketChannel channel) throws IOException;
-
+	
 	public void setKey(ReactorKey key);
 
 	public ReactorKey getKey();

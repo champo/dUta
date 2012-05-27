@@ -4,17 +4,14 @@ public class Interest {
 	
 	private boolean preProcess;
 	
-	private boolean postProcess;
-	
-	private boolean body;
+	private boolean append;
 	
 	private boolean full;
 	
-	public Interest(boolean preProcess, boolean postProcess, boolean body, boolean full) {
+	public Interest(boolean preProcess, boolean append, boolean full) {
 		super();
 		this.preProcess = preProcess;
-		this.postProcess = postProcess;
-		this.body = body;
+		this.append = append;
 		this.full = full;
 	}
 
@@ -22,12 +19,8 @@ public class Interest {
 		return preProcess;
 	}
 	
-	public boolean postProcess() {
-		return postProcess;
-	}
-	
-	public boolean body() {
-		return body;
+	public boolean append() {
+		return append;
 	}
 	
 	public boolean full() {

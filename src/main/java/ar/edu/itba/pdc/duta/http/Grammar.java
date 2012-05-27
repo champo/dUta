@@ -4,6 +4,8 @@ import java.util.regex.Pattern;
 
 public class Grammar {
 	
+	public static final String HTTP11 = "HTTP/1.1";
+	
 	public static boolean isControlCharacter(char c) {
 		
 		return c < '\u0020' || c == '\u007f';

@@ -31,6 +31,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		keyLock = new Object();
 	}
 
+	@Override
 	public void queueOutput(ByteBuffer output) {
 		outputQueue.add(output);
 		
