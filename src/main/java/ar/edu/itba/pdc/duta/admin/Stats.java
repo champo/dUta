@@ -1,6 +1,11 @@
 package ar.edu.itba.pdc.duta.admin;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
+
+import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 
 public class Stats {
 	
@@ -17,6 +22,8 @@ public class Stats {
 	private static long clientTraffic = 0;
 
 	private static long serverTraffic = 0;
+	
+	private static Map<Class<? extends Filter>, Long> filterMatches= new HashMap<Class<? extends Filter>, Long>();
 	
 	public static synchronized void newInbound() {
 		inbound++;
@@ -39,6 +46,10 @@ public class Stats {
 		logger.info("Outbound " + outbound + " (" + outClosed + ")");
 		logger.info("Traffic with clients: " + clientTraffic);
 		logger.info("Traffic with servers: " + serverTraffic);
+		
+		for (Map.Entry<Class<? extends Filter>, Long> entry : filterMatches.entrySet()) {
+			logger.info("Filter " + entry.getKey().getName() + ": " + entry.getValue());
+		}
 	}
 	
 	public static synchronized void addClientTraffic(long bytes) {
@@ -47,5 +58,16 @@ public class Stats {
 	
 	public static synchronized void addServerTraffic(long bytes) {
 		serverTraffic += bytes;
+	}
+	
+	public static synchronized void registerFilterType(Class<? extends Filter> filter) {
+		
+		if (!filterMatches.containsKey(filter)) {
+			filterMatches.put(filter, 0L);
+		}
+	}
+	
+	public static synchronized void applyFilter(Class<? extends Filter> filter) {
+		filterMatches.put(filter, filterMatches.get(filter) + 1L);
 	}
 }

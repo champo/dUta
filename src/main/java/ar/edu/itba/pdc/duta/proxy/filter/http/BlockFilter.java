@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
@@ -14,6 +15,10 @@ import ar.edu.itba.pdc.duta.proxy.filter.Interest;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 public class BlockFilter implements Filter {
+	
+	{
+		Stats.registerFilterType(BlockFilter.class);
+	}
 
 	@Override
 	public FilterPart getRequestPart() {
