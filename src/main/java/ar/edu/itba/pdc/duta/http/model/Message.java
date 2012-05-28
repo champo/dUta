@@ -27,5 +27,10 @@ public class Message {
 	public List<ByteBuffer> getBody() {
 		return body;
 	}
+
+	public void setBody(ByteBuffer buffer) {
+		body.clear();
+		body.add(buffer);
+	}
 	
 }

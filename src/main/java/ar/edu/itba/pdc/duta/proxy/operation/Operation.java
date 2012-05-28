@@ -19,6 +19,7 @@ import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
+import ar.edu.itba.pdc.duta.proxy.filter.http.L33tFilter;
 
 public class Operation {
 	
@@ -131,6 +132,7 @@ public class Operation {
 		//FIXME: Get this from somewhere else
 		filters = new ArrayList<Filter>();
 		filters.add(new HttpFilter());
+		filters.add(new L33tFilter());
 		//filters.add(new BlockFilter());
 	}
 
