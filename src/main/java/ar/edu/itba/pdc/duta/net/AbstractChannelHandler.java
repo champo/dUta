@@ -41,6 +41,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			}
 		}
 	}
+	
+	public abstract void wroteBytes(long bytes);
 
 	@Override
 	public void write(SocketChannel channel) throws IOException {
@@ -49,12 +51,11 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 			ByteBuffer buffer = outputQueue.peek();
 			try {
-				channel.write(buffer);
+				wroteBytes(channel.write(buffer));
 			} catch (IOException e) {
 				logger.warn("Writing to socket failed.", e);
-				System.err.println(e);
+
 				// This should mean the pipe was broken. We bail in that case.
-				
 				synchronized (keyLock) {
 					key.close();
 				}

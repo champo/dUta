@@ -6,12 +6,12 @@ import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.net.AbstractChannelHandler;
-import ar.edu.itba.pdc.duta.net.Server.Stats;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 public class RequestChannelHandler extends AbstractChannelHandler {
@@ -37,6 +37,8 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			close();
 			return;
 		}
+		
+		Stats.addClientTraffic(read);
 
 		int pos = inputBuffer.position();
 		inputBuffer.reset();
@@ -94,5 +96,11 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 	public void close() {
 		super.close();
 		Stats.closeInbound();
+	}
+	
+
+	@Override
+	public void wroteBytes(long bytes) {
+		Stats.addClientTraffic(bytes);
 	}
 }

@@ -8,8 +8,8 @@ import java.util.Queue;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.net.Server;
-import ar.edu.itba.pdc.duta.net.Server.Stats;
 
 public class ConnectionPool {
 	

@@ -7,9 +7,9 @@ import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.net.AbstractChannelHandler;
 import ar.edu.itba.pdc.duta.net.Server;
-import ar.edu.itba.pdc.duta.net.Server.Stats;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 public class ResponseChannelHandler extends AbstractChannelHandler {
@@ -31,7 +31,8 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 	@Override
 	public void read(SocketChannel channel) throws IOException {
 		ByteBuffer buffer = ByteBuffer.allocate(4096);
-		if (channel.read(buffer) == -1) {
+		int read = channel.read(buffer);
+		if (read == -1) {
 			
 			logger.debug("Got closed, removing myself from the world!");
 			if (op != null) {
@@ -46,6 +47,8 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 			return;
 		}
 		
+		Stats.addServerTraffic(read);
+		
 		buffer.flip();
 		
 		if (op != null) {
@@ -55,6 +58,11 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 
 	public InetSocketAddress getAddress() {
 		return address;
+	}
+
+	@Override
+	public void wroteBytes(long bytes) {
+		Stats.addServerTraffic(bytes);
 	}
 
 }

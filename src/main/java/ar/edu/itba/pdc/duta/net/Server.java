@@ -13,6 +13,7 @@ import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.proxy.ConnectionPool;
 import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
 
@@ -123,41 +124,5 @@ public class Server {
 	
 	public static ConnectionPool getConnectionPool() {
 		return instance.resolver;
-	}
-
-	public static class Stats {
-		
-		private static final Logger logger = Logger.getLogger(Stats.class); 
-		
-		private static int inbound = 0;
-		
-		private static int outbound = 0;
-		
-		private static int outClosed = 0; 
-		
-		private static int inClosed = 0;
-		
-		public static synchronized void newInbound() {
-			inbound++;
-		}
-		
-		public static synchronized void newOutbound() {
-			outbound++;
-		}
-		
-		public static synchronized void closeInbound() {
-			inClosed++;
-		}
-		
-		public static synchronized void closeOutbound() {
-			outClosed++;
-		}
-		
-		public static synchronized void log() {
-			logger.info("Inbound " + inbound);
-			logger.info("Outbound " + outbound);
-			logger.info("Inbound closed " + inClosed);
-			logger.info("Outbound closed" + outClosed);
-		}
 	}
 }
