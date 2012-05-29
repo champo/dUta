@@ -36,7 +36,7 @@ public class FilterChain {
 		
 		for (OperationFilter filter : filters) {
 			logger.debug("Filter " + filter.part);
-			if (filter.interest.append() || filter.interest.full()) {
+			if (filter.interest.bytesRecieved() || filter.interest.full()) {
 				needsBody = true;
 			}
 		}
@@ -110,8 +110,8 @@ public class FilterChain {
 			msg.appendToBody(buff);
 			for (OperationFilter filter : filters) {
 				
-				if (filter.interest.append()) {
-					Message result = filter.part.append(op, msg, buff);
+				if (filter.interest.bytesRecieved()) {
+					Message result = filter.part.bytesRecieved(op, msg, buff.remaining(), bodySize);
 					if (result != null) {
 						return result;
 					}

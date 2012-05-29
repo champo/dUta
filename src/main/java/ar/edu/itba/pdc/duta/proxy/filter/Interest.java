@@ -4,14 +4,14 @@ public class Interest {
 	
 	private boolean preProcess;
 	
-	private boolean append;
+	private boolean bytesRecieved;
 	
 	private boolean full;
 	
-	public Interest(boolean preProcess, boolean append, boolean full) {
+	public Interest(boolean preProcess, boolean bytesRecieved, boolean full) {
 		super();
 		this.preProcess = preProcess;
-		this.append = append;
+		this.bytesRecieved = bytesRecieved;
 		this.full = full;
 	}
 
@@ -19,8 +19,8 @@ public class Interest {
 		return preProcess;
 	}
 	
-	public boolean append() {
-		return append;
+	public boolean bytesRecieved() {
+		return bytesRecieved;
 	}
 	
 	public boolean full() {

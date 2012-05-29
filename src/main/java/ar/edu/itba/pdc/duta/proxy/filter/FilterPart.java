@@ -1,7 +1,5 @@
 package ar.edu.itba.pdc.duta.proxy.filter;
 
-import java.nio.ByteBuffer;
-
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
@@ -14,7 +12,7 @@ public abstract class FilterPart {
 		return null;
 	}
 
-	public Message append(Operation op, Message msg, ByteBuffer buff) {
+	public Message bytesRecieved(Operation op, Message msg, long delta, long total) {
 		return null;
 	}
 
