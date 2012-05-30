@@ -1,9 +1,9 @@
 package ar.edu.itba.pdc.duta.net;
 
-import java.nio.ByteBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
 public interface OutputChannel {
 
-	public void queueOutput(ByteBuffer output);
+	public void queueOutput(DataBuffer output);
 	
 }

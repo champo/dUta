@@ -1,8 +1,8 @@
 package ar.edu.itba.pdc.duta.proxy.operation;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,11 +15,13 @@ import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.http.parser.ResponseParser;
 import ar.edu.itba.pdc.duta.net.Server;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.WrappedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
-import ar.edu.itba.pdc.duta.proxy.filter.http.L33tFilter;
 
 public class Operation {
 	
@@ -45,7 +47,7 @@ public class Operation {
 		requestChannel = requestChannelHandler;
 	}
 	
-	public void setRequestHeader(RequestHeader header, ByteBuffer buff) {
+	public void setRequestHeader(RequestHeader header, DataBuffer buffer) {
 		
 		closeRequest = Connection.checkStatus(header) == Connection.CLOSE;
 		
@@ -78,10 +80,9 @@ public class Operation {
 		}
 		
 		if (!isRequestComplete()) {
-			if (buff.hasRemaining()) {
-				buff.compact();
-				buff.flip();
-				addRequestData(buff);
+			if (buffer.hasReadableBytes()) {
+				DataBuffer remainder = new WrappedDataBuffer(buffer, buffer.getReadIndex(), buffer.remaining());
+				addRequestData(remainder);
 			}
 		}
 		
@@ -92,7 +93,7 @@ public class Operation {
 		logger.debug("Got a response message from a filter. Headers are: " + res.getHeader());
 		
 		try {
-			requestChannel.queueOutput(ByteBuffer.wrap(res.getHeader().toString().getBytes("ascii")));
+			requestChannel.queueOutput(new FixedDataBuffer(res.getHeader().toString().getBytes("ascii")));
 		} catch (UnsupportedEncodingException e) {
 			// If this happens, the world is screwed
 			logger.error("Failed to encode header", e);
@@ -101,7 +102,7 @@ public class Operation {
 			return;
 		}
 		
-		for (ByteBuffer buffer : res.getBody()) {
+		for (DataBuffer buffer : res.getBody()) {
 			requestChannel.queueOutput(buffer);
 		}
 		
@@ -132,7 +133,7 @@ public class Operation {
 		//FIXME: Get this from somewhere else
 		filters = new ArrayList<Filter>();
 		filters.add(new HttpFilter());
-		filters.add(new L33tFilter());
+		//filters.add(new L33tFilter());
 		//filters.add(new BlockFilter());
 	}
 
@@ -164,8 +165,8 @@ public class Operation {
 		closed = true;
 	}
 	
-	public void addRequestData(ByteBuffer inputBuffer) {
-		Message res = requestChain.append(this, inputBuffer);
+	public void addRequestData(DataBuffer buffer) {
+		Message res = requestChain.append(this, buffer);
 		if (res != null) {
 			writeMessage(res);
 		}
@@ -175,7 +176,7 @@ public class Operation {
 		return closed || requestChain.isMessageComplete();
 	}
 	
-	public void addResponseData(ByteBuffer buffer) {
+	public void addResponseData(DataBuffer buffer) {
 		
 		if (responseChain == null) {
 		
@@ -183,6 +184,14 @@ public class Operation {
 			try {
 				parser.parse();
 			} catch (ParseException e) {
+				logger.error("Failed to parse response header", e);
+				
+				//TODO: 500 out
+				close();
+				requestChannel.close();
+				
+				return;
+			} catch (IOException e) {
 				logger.error("Failed to parse response header", e);
 				
 				//TODO: 500 out
@@ -210,9 +219,8 @@ public class Operation {
 				writeMessage(res);
 			}
 			
-			if (buffer.hasRemaining()) {
-				buffer.compact();
-				buffer.flip();
+			if (buffer.hasReadableBytes()) {
+				buffer = new WrappedDataBuffer(buffer, buffer.getReadIndex(), buffer.remaining());
 			} else if (responseChain.isMessageComplete()) {
 				close();
 				return;
@@ -227,5 +235,23 @@ public class Operation {
 			close();
 		}
 		
+	}
+
+	public DataBuffer getRequestBuffer() {
+		
+		if (requestChain == null) {
+			return new FixedDataBuffer(4096);
+		} else {
+			return requestChain.getBuffer();
+		}
+	}
+	
+	public DataBuffer getResponseBuffer() {
+		
+		if (responseChain == null) {
+			return new FixedDataBuffer(4096);
+		} else {
+			return responseChain.getBuffer();
+		}
 	}
 }

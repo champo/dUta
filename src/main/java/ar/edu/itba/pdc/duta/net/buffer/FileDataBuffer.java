@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
@@ -13,19 +14,13 @@ import java.nio.channels.WritableByteChannel;
 
 import org.apache.log4j.Logger;
 
-public class FileDataBuffer implements DataBuffer {
+public class FileDataBuffer extends AbstractDataBuffer {
 	
 	private static final Logger logger = Logger.getLogger(FileDataBuffer.class);
-	
-	private static final int READ_SIZE = (int) Math.pow(2, 10);
 	
 	private RandomAccessFile file;
 	
 	private FileChannel fileChannel;
-	
-	private int writeIndex = 0;
-	
-	private int readIndex = 0;
 	
 	private MappedByteBuffer buffer = null;
 	
@@ -45,34 +40,26 @@ public class FileDataBuffer implements DataBuffer {
 	}
 	
 	@Override
-	public int readFrom(ReadableByteChannel channel) throws IOException {
+	public int readFrom(ReadableByteChannel channel, int limit) throws IOException {
 		
-		long total = 0L, bytes;
+		long bytes = fileChannel.transferFrom(channel, writeIndex, limit);
+		writeIndex += bytes;
 		
-		while ((bytes = fileChannel.transferFrom(channel, writeIndex, READ_SIZE)) != 0) {
-			total += bytes;
-			writeIndex += bytes;
-		}
+		return (int) bytes;
+	}
+
+
+	@Override
+	public int writeTo(WritableByteChannel channel, int limit) throws IOException {
 		
-		return (int) total;
+		long bytes = fileChannel.transferTo(readIndex, limit, channel);
+		readIndex += bytes;
+		
+		return (int) bytes;
 	}
 
 	@Override
-	public int writeTo(WritableByteChannel channel) throws IOException {
-
-		long total = 0L, bytes;
-		
-		while ((bytes = fileChannel.transferTo(READ_SIZE, readIndex, channel)) != 0) {
-			total += bytes;
-			readIndex += bytes;
-		}
-		
-		
-		return (int) total;
-	}
-
-	@Override
-	public byte getByte() throws IOException {
+	public byte get() throws IOException {
 		
 		if (buffer == null) {
 			
@@ -114,26 +101,6 @@ public class FileDataBuffer implements DataBuffer {
 	}
 
 	@Override
-	public int getReadIndex() {
-		return readIndex;
-	}
-
-	@Override
-	public void setReadIndex(int index) {
-		readIndex = index;
-	}
-
-	@Override
-	public int getWriteIndex() {
-		return writeIndex;
-	}
-
-	@Override
-	public void setWriteIndex(int index) {
-		writeIndex = index;
-	}
-
-	@Override
 	public void collect() {
 		
 		buffer = null;
@@ -145,6 +112,11 @@ public class FileDataBuffer implements DataBuffer {
 		}
 		
 		file = null;
+	}
+	
+	@Override
+	public void get(byte[] bytes, int offset, int count) throws IOException {
+		fileChannel.read(ByteBuffer.wrap(bytes, offset, count));
 	}
 
 }

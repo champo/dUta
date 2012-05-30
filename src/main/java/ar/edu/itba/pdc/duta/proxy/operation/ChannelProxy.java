@@ -1,12 +1,12 @@
 package ar.edu.itba.pdc.duta.proxy.operation;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.Server;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.proxy.ResponseChannelHandler;
 
 public class ChannelProxy implements OutputChannel {
@@ -25,7 +25,8 @@ public class ChannelProxy implements OutputChannel {
 		this.op = op;
 	}
 
-	public void queueOutput(ByteBuffer buff) {
+	@Override
+	public void queueOutput(DataBuffer buff) {
 		
 		if (channel == null) {
 			openChannel();

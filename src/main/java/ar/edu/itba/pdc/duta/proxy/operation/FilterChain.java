@@ -1,7 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy.operation;
 
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -9,6 +8,8 @@ import org.apache.log4j.Logger;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 
 public class FilterChain {
 	
@@ -100,7 +101,7 @@ public class FilterChain {
 		}
 	}
 
-	public Message append(Operation op, ByteBuffer buff) {
+	public Message append(Operation op, DataBuffer buff) {
 		
 		bodySize += buff.remaining();
 		if (!needsBody) {
@@ -148,7 +149,7 @@ public class FilterChain {
 			return res;
 		}
 		
-		for (ByteBuffer buff : msg.getBody()) {
+		for (DataBuffer buff : msg.getBody()) {
 			outputChannel.queueOutput(buff);
 		}
 
@@ -159,7 +160,7 @@ public class FilterChain {
 		
 		logger.debug("Writing header " + msg.getHeader());
 		try {
-			outputChannel.queueOutput(ByteBuffer.wrap(msg.getHeader().toString().getBytes("ascii")));
+			outputChannel.queueOutput(new FixedDataBuffer(msg.getHeader().toString().getBytes("ascii")));
 		} catch (UnsupportedEncodingException e) {
 			// If this happens, the world is screwed
 			logger.error("Failed to encode header", e);
@@ -174,6 +175,10 @@ public class FilterChain {
 	public boolean isMessageComplete() {
 		logger.debug("isMessageComplete " + (complete ? "true" : "false"));
 		return complete;
+	}
+
+	public DataBuffer getBuffer() {
+		return new FixedDataBuffer(8192);
 	}
 
 }

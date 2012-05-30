@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-public class FixedDataBuffer implements DataBuffer {
+public class FixedDataBuffer extends AbstractDataBuffer {
 	
 	private ByteBuffer buffer;
 	
@@ -14,19 +14,25 @@ public class FixedDataBuffer implements DataBuffer {
 	private int readIndex = 0;
 	
 	public FixedDataBuffer(int capacity) {
-		super();
-		this.buffer = ByteBuffer.allocate(capacity);
+		this(ByteBuffer.allocate(capacity));
 	}
 	
 	public FixedDataBuffer(ByteBuffer buffer) {
 		super();
 		this.buffer = buffer;
 	}
+	
+	public FixedDataBuffer(byte[] data) {
+		this(ByteBuffer.wrap(data));
+	}
+	
 
 	@Override
-	public int readFrom(ReadableByteChannel channel) throws IOException {
+	public int readFrom(ReadableByteChannel channel, int limit) throws IOException {
 		
+		buffer.limit(Math.min(writeIndex, readIndex + limit));
 		buffer.position(readIndex);
+		
 		int read = channel.read(buffer);
 		readIndex = buffer.position();
 		
@@ -34,9 +40,36 @@ public class FixedDataBuffer implements DataBuffer {
 	}
 
 	@Override
+	public int readFrom(ReadableByteChannel channel) throws IOException {
+		
+		buffer.limit(writeIndex);
+		buffer.position(readIndex);
+		
+		int read = channel.read(buffer);
+		readIndex = buffer.position();
+		
+		return read;
+	}
+	
+	@Override
+	public int writeTo(WritableByteChannel channel, int limit) throws IOException {
+
+		buffer.limit(Math.min(buffer.capacity(), writeIndex + limit));
+		buffer.position(writeIndex);
+		
+		int res = channel.write(buffer);
+		writeIndex = buffer.position();
+		
+		return res;
+
+	}
+
+	@Override
 	public int writeTo(WritableByteChannel channel) throws IOException {
 
+		buffer.limit(buffer.capacity());
 		buffer.position(writeIndex);
+		
 		int res = channel.write(buffer);
 		writeIndex = buffer.position();
 		
@@ -44,7 +77,7 @@ public class FixedDataBuffer implements DataBuffer {
 	}
 
 	@Override
-	public byte getByte() {
+	public byte get() {
 		
 		buffer.position(readIndex);
 		byte res = buffer.get();
@@ -59,28 +92,14 @@ public class FixedDataBuffer implements DataBuffer {
 	}
 
 	@Override
-	public int getReadIndex() {
-		return readIndex;
-	}
-
-	@Override
-	public void setReadIndex(int index) {
-		readIndex = index;
-	}
-
-	@Override
-	public int getWriteIndex() {
-		return writeIndex;
-	}
-
-	@Override
-	public void setWriteIndex(int index) {
-		writeIndex = index;
-	}
-
-	@Override
 	public void collect() {
 		buffer = null;
+	}
+
+	@Override
+	public void get(byte[] bytes, int offset, int count) throws IOException {
+		buffer.limit(writeIndex);
+		buffer.get(bytes, offset, count);
 	}
 
 }

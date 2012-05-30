@@ -1,7 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
@@ -12,27 +11,31 @@ import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.net.AbstractChannelHandler;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 public class RequestChannelHandler extends AbstractChannelHandler {
 
 	private static Logger logger = Logger.getLogger(RequestChannelHandler.class);
 
-	private ByteBuffer inputBuffer;
-
 	private RequestParser parser;
 
 	private Operation op;
 
+	private DataBuffer buffer;
+
 	@Override
 	public void read(SocketChannel channel) throws IOException {
 
-		if (inputBuffer == null) {
-			inputBuffer = ByteBuffer.allocate(8192);
+		if (op == null) {
+			op = new Operation(this);
+			buffer = op.getRequestBuffer();
+			parser = new RequestParser(buffer);
+		} else if (parser == null) {
+			buffer = op.getRequestBuffer();
 		}
 		
-		inputBuffer.mark();
-		int read = channel.read(inputBuffer);
+		int read = buffer.readFrom(channel);
 		if (read == -1) {
 			close();
 			return;
@@ -40,30 +43,24 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 		
 		Stats.addClientTraffic(read);
 
-		int pos = inputBuffer.position();
-		inputBuffer.reset();
-		inputBuffer.limit(pos);
-		
-		if (op == null) {
+		if (parser != null) {
 			processHeader();
 		} else {
 			
-			op.addRequestData(inputBuffer);
+			op.addRequestData(buffer);
 			
 			if (op.isRequestComplete()) {
 				logger.debug("Detaching operation from request");
 				// If it returned true, it means the request data should be complete
 				op = null;
 			}
-			
-			inputBuffer = null;
 		}
 	}
 
 	private void processHeader() {
 
 		if (parser == null) {
-			parser = new RequestParser(inputBuffer);
+			parser = new RequestParser(buffer);
 		}
 		
 		try {
@@ -72,16 +69,21 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			logger.error("Aborting request due to malformed headers", e);
 			close();
 			return;
+		} catch (IOException e) {
+			logger.error("Failed to read headers, aborting", e);
+			close();
+			return;
 		}
 
 		MessageHeader header = parser.getHeader();
 		if (header != null) {
-			logger.debug("Have full header, creating op...");
+			logger.debug("Have full header, giving to op...");
 			logger.debug(header);
 			
+			op.setRequestHeader((RequestHeader) header, buffer);
+			
 			parser = null;
-			op = new Operation(this);
-			op.setRequestHeader((RequestHeader) header, inputBuffer);
+			buffer = null;
 			
 			if (op.isRequestComplete()) {
 				// If it returned true, it means the request data should be complete
@@ -89,7 +91,6 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			}
 		}
 		
-		inputBuffer.limit(inputBuffer.capacity());
 	}
 
 	@Override

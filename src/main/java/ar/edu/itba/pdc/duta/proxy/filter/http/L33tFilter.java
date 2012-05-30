@@ -1,6 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
-import java.nio.ByteBuffer;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -10,6 +10,8 @@ import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.Interest;
@@ -66,19 +68,28 @@ public class L33tFilter implements Filter {
 		@Override
 		public Message filter(Operation op, Message msg) {
 
-			List<ByteBuffer> buffers = msg.getBody();
+			List<DataBuffer> buffers = msg.getBody();
 
 			int size = 0;
-			for (ByteBuffer byteBuffer : buffers) {
-				size += byteBuffer.limit();
+			for (DataBuffer buffer : buffers) {
+				buffer.setReadIndex(0);
+				size += buffer.remaining();
 			}
 			
 			byte[] bytes = new byte[size];
 			int i = 0;
-			for (ByteBuffer buffer : buffers) {
-				buffer.get(bytes, i, buffer.remaining());
-				buffer.rewind();
-				i += buffer.remaining();
+			
+			try {
+			
+				for (DataBuffer buffer : buffers) {
+					buffer.get(bytes, i, buffer.remaining());
+					buffer.setReadIndex(0);
+					i += buffer.remaining();
+				}
+			} catch (IOException e) {
+				logger.error("Failed to filter message", e);
+				//TODO: Return 500
+				return null;
 			}
 			
 			String body = new String(bytes, charset);
@@ -88,7 +99,7 @@ public class L33tFilter implements Filter {
 				.replace('i', '1')
 				.replace('o', '0');
 			
-			msg.setBody(ByteBuffer.wrap(body.getBytes(charset)));
+			msg.setBody(new FixedDataBuffer(body.getBytes(charset)));
 		
 			return null;
 		}

@@ -1,11 +1,12 @@
 package ar.edu.itba.pdc.duta.http.parser;
 
-import java.nio.ByteBuffer;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
 public abstract class MessageParser {
 
@@ -13,14 +14,14 @@ public abstract class MessageParser {
 		START_LINE, BEGINNING_OF_LINE, FIELD_NAME, FIELD_VALUE, END_OF_HEADER 
 	}
 
-	private ByteBuffer buffer;
+	private DataBuffer buffer;
 	private States state;
 	private int line;
 	private StringBuilder currString;
 	private String fieldName;
 	protected Map<String, StringBuilder> fields;
 	
-	public MessageParser(ByteBuffer buffer) {
+	public MessageParser(DataBuffer buffer) {
 
 		this.buffer = buffer;
 		this.state = States.START_LINE;
@@ -30,12 +31,12 @@ public abstract class MessageParser {
 		this.fields = new HashMap<String, StringBuilder>();
 	}
 
-	public boolean parse() throws ParseException {
+	public boolean parse() throws ParseException, IOException {
 		
 		char oldc;
 		char c = '\0';
 
-		while (state != States.END_OF_HEADER && buffer.hasRemaining()) {
+		while (state != States.END_OF_HEADER && buffer.hasReadableBytes()) {
 
 			oldc = c;
 			c = (char)buffer.get();
