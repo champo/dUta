@@ -10,14 +10,18 @@ public interface DataBuffer {
 	
 	public int writeTo(WritableByteChannel channel) throws IOException;
 	
-	public void setPosition(int position);
-	
-	public int getPosition();
-	
-	public int getLength();
-	
-	public byte getByte();
+	public byte getByte() throws IOException;
 	
 	public boolean hasFreeSpace();
-
+	
+	public int getReadIndex();
+	
+	public void setReadIndex(int index);
+	
+	public int getWriteIndex();
+	
+	public void setWriteIndex(int index);
+	
+	public void collect();
+	
 }
