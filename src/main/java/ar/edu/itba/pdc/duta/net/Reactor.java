@@ -62,34 +62,52 @@ public class Reactor implements Runnable {
 					SelectionKey key = keys.next();
 					keys.remove();
 					
-					SocketChannel channel = (SocketChannel) key.channel();
-					ChannelHandler handler = (ChannelHandler) key.attachment();
-					
-					if (key.isValid() && key.isConnectable()) {
-						channel.finishConnect();
-						handler.getKey().setCachedOps();
-						continue;
-					}
-					
-					if (key.isValid() && key.isReadable()) {
-						handler.read(channel);
-					}
-					
-					if (key.isValid() && key.isWritable()) {
-						handler.write(channel);
-					}
-					
-					if (!key.isValid()) {
-						channel.close();
-						
-						// Remove the link between handler and key
-						key.attach(null);
-					}
+					handleInterest(key);
 				}
 
 			} catch (IOException e) {
 				logger.warn("Caught exception on the reactor run loop.", e);
 			}
+		}
+	}
+
+	private void handleInterest(SelectionKey key) {
+		SocketChannel channel = (SocketChannel) key.channel();
+		ChannelHandler handler = (ChannelHandler) key.attachment();
+		
+		try {
+			
+			if (key.isValid() && key.isConnectable()) {
+				channel.finishConnect();
+				handler.getKey().setCachedOps();
+				return;
+			}
+
+			if (key.isValid() && key.isReadable()) {
+				handler.read(channel);
+			}
+
+			if (key.isValid() && key.isWritable()) {
+				handler.write(channel);
+			}
+
+			if (!key.isValid()) {
+				channel.close();
+
+				// Remove the link between handler and key
+				key.attach(null);
+			}
+			
+		} catch (IOException e) {
+			
+			logger.warn("Closing socket due to catched exception", e);
+			
+			try {
+				channel.close();
+			} catch (IOException t) {
+				logger.error("Failed to close channel after force close due to catching an IOException", t);
+			}
+			key.cancel();
 		}
 	}
 	
