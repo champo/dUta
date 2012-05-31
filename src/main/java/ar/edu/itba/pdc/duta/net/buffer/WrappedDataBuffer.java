@@ -31,22 +31,22 @@ public class WrappedDataBuffer implements DataBuffer {
 
 	@Override
 	public int readFrom(ReadableByteChannel channel) throws IOException {
-		return backer.readFrom(channel, offset + length - backer.getReadIndex());
+		return backer.readFrom(channel, offset + length - backer.getWriteIndex());
 	}
 
 	@Override
 	public int readFrom(ReadableByteChannel channel, int limit) throws IOException {
-		return backer.readFrom(channel, Math.min(limit, offset + length - backer.getReadIndex()));
+		return backer.readFrom(channel, Math.min(limit, offset + length - backer.getWriteIndex()));
 	}
 
 	@Override
 	public int writeTo(WritableByteChannel channel) throws IOException {
-		return backer.writeTo(channel, offset + length - backer.getWriteIndex());
+		return backer.writeTo(channel, offset + length - backer.getReadIndex());
 	}
 
 	@Override
 	public int writeTo(WritableByteChannel channel, int limit) throws IOException {
-		return backer.writeTo(channel, Math.min(limit, offset + length - backer.getWriteIndex()));
+		return backer.writeTo(channel, Math.min(limit, offset + length - backer.getReadIndex()));
 	}
 
 	@Override

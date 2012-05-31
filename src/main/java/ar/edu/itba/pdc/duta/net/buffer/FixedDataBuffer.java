@@ -5,13 +5,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
+import org.apache.log4j.Logger;
+
 public class FixedDataBuffer extends AbstractDataBuffer {
 	
+	private static final Logger logger = Logger.getLogger(FixedDataBuffer.class);
+	
 	private ByteBuffer buffer;
-	
-	private int writeIndex = 0;
-	
-	private int readIndex = 0;
 	
 	public FixedDataBuffer(int capacity) {
 		this(ByteBuffer.allocate(capacity));
@@ -24,17 +24,18 @@ public class FixedDataBuffer extends AbstractDataBuffer {
 	
 	public FixedDataBuffer(byte[] data) {
 		this(ByteBuffer.wrap(data));
+		writeIndex = data.length;
 	}
 	
 
 	@Override
 	public int readFrom(ReadableByteChannel channel, int limit) throws IOException {
 		
-		buffer.limit(Math.min(writeIndex, readIndex + limit));
-		buffer.position(readIndex);
+		buffer.limit(Math.min(buffer.capacity(), writeIndex + limit));
+		buffer.position(writeIndex);
 		
 		int read = channel.read(buffer);
-		readIndex = buffer.position();
+		writeIndex = buffer.position();
 		
 		return read;
 	}
@@ -42,11 +43,11 @@ public class FixedDataBuffer extends AbstractDataBuffer {
 	@Override
 	public int readFrom(ReadableByteChannel channel) throws IOException {
 		
-		buffer.limit(writeIndex);
-		buffer.position(readIndex);
+		buffer.limit(buffer.capacity());
+		buffer.position(writeIndex);
 		
 		int read = channel.read(buffer);
-		readIndex = buffer.position();
+		writeIndex = buffer.position();
 		
 		return read;
 	}
@@ -54,11 +55,11 @@ public class FixedDataBuffer extends AbstractDataBuffer {
 	@Override
 	public int writeTo(WritableByteChannel channel, int limit) throws IOException {
 
-		buffer.limit(Math.min(buffer.capacity(), writeIndex + limit));
-		buffer.position(writeIndex);
+		buffer.limit(Math.min(writeIndex, readIndex + limit));
+		buffer.position(readIndex);
 		
 		int res = channel.write(buffer);
-		writeIndex = buffer.position();
+		readIndex = buffer.position();
 		
 		return res;
 
@@ -67,11 +68,11 @@ public class FixedDataBuffer extends AbstractDataBuffer {
 	@Override
 	public int writeTo(WritableByteChannel channel) throws IOException {
 
-		buffer.limit(buffer.capacity());
-		buffer.position(writeIndex);
+		buffer.limit(writeIndex);
+		buffer.position(readIndex);
 		
 		int res = channel.write(buffer);
-		writeIndex = buffer.position();
+		readIndex = buffer.position();
 		
 		return res;
 	}
