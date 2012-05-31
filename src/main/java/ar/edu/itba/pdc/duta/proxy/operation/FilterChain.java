@@ -1,5 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy.operation;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.FileDataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 
 public class FilterChain {
@@ -22,6 +24,8 @@ public class FilterChain {
 	private boolean needsBody;
 
 	private OutputChannel outputChannel;
+	
+	private DataBuffer buffer;
 
 	private boolean complete;
 	
@@ -57,7 +61,18 @@ public class FilterChain {
 			}
 		}
 		
-		if (!needsBody) {
+		if (needsBody) {
+			
+			if(getLength() > 20 * 1024 * 1024) {
+				
+				try {
+					buffer = new FileDataBuffer();
+				} catch (IOException e) {
+					logger.warn("Failed to allocate a FileDataBuffer, falling back to memory storage", e);
+				}
+			}
+			
+		} else {
 			Message res = writeHeader();
 			if (res != null) {
 				return res;
@@ -82,15 +97,8 @@ public class FilterChain {
 		
 		MessageHeader header = msg.getHeader();
 		
-		String length = header.getField("Content-Length");
 		String encoding = header.getField("Transfer-Encoding");
-
-		int len = 0;
-		try {
-			len = Integer.parseInt(length);
-		} catch (NumberFormatException e) {
-			len = -1;
-		}
+		int len = getLength();
 		
 		if (len != -1) {
 			complete = len <= bodySize;
@@ -99,6 +107,18 @@ public class FilterChain {
 		} else {
 			//TODO: Chuncked sucks
 		}
+	}
+
+	private int getLength() {
+		String length = msg.getHeader().getField("Content-Length");
+
+		int len = 0;
+		try {
+			len = Integer.parseInt(length);
+		} catch (NumberFormatException e) {
+			len = -1;
+		}
+		return len;
 	}
 
 	public Message append(Operation op, DataBuffer buff) {
@@ -178,6 +198,9 @@ public class FilterChain {
 	}
 
 	public DataBuffer getBuffer() {
+		if (buffer != null)  {
+			return buffer;
+		}
 		return new FixedDataBuffer(8192);
 	}
 
