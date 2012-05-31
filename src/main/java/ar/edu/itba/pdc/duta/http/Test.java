@@ -1,10 +1,9 @@
 package ar.edu.itba.pdc.duta.http;
 
-import java.nio.ByteBuffer;
-
 import ar.edu.itba.pdc.duta.http.parser.MessageParser;
 import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.http.parser.ResponseParser;
+import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 
 
 public class Test {
@@ -36,12 +35,12 @@ public class Test {
 
 		MessageParser parser;
 		
-		parser = new RequestParser(ByteBuffer.wrap(request.getBytes("US-ASCII")));
+		parser = new RequestParser(new FixedDataBuffer(request.getBytes("US-ASCII")));
 		while (!parser.parse());
 		
 		System.out.println(parser.getHeader());
 		
-		parser = new ResponseParser(ByteBuffer.wrap(response.getBytes("US-ASCII")));
+		parser = new ResponseParser(new FixedDataBuffer(response.getBytes("US-ASCII")));
 		while (!parser.parse());
 
 		System.out.println(parser.getHeader());

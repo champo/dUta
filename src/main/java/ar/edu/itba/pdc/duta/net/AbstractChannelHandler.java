@@ -1,7 +1,6 @@
 package ar.edu.itba.pdc.duta.net;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -11,6 +10,7 @@ import net.jcip.annotations.ThreadSafe;
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
 @ThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
@@ -19,20 +19,20 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	protected ReactorKey key;
 
-	private Queue<ByteBuffer> outputQueue;
+	private Queue<DataBuffer> outputQueue;
 
 	protected boolean close = false;
 
 	protected Object keyLock;
 
 	public AbstractChannelHandler() {
-		outputQueue = new LinkedBlockingQueue<ByteBuffer>();
+		outputQueue = new LinkedBlockingQueue<DataBuffer>();
 		key = null;
 		keyLock = new Object();
 	}
 
 	@Override
-	public void queueOutput(ByteBuffer output) {
+	public void queueOutput(DataBuffer output) {
 		outputQueue.add(output);
 		
 		synchronized (keyLock) {
@@ -49,9 +49,9 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 		while (!outputQueue.isEmpty()) {
 
-			ByteBuffer buffer = outputQueue.peek();
+			DataBuffer buffer = outputQueue.peek();
 			try {
-				wroteBytes(channel.write(buffer));
+				wroteBytes(buffer.writeTo(channel));
 			} catch (IOException e) {
 				logger.warn("Writing to socket failed.", e);
 
@@ -62,7 +62,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 				return;
 			}
 
-			if (buffer.hasRemaining()) {
+			if (buffer.hasReadableBytes()) {
 				// If we didn't write the whole thing, the socket won't accept more
 				break;
 			} else {

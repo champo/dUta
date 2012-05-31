@@ -1,6 +1,5 @@
 package ar.edu.itba.pdc.duta.http.parser;
 
-import java.nio.ByteBuffer;
 import java.util.InputMismatchException;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -9,6 +8,7 @@ import java.util.Scanner;
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
 public class ResponseParser extends MessageParser {
 
@@ -16,7 +16,7 @@ public class ResponseParser extends MessageParser {
 	private String reasonPhrase;
 	private int statusCode;
 
-	public ResponseParser(ByteBuffer buffer) {
+	public ResponseParser(DataBuffer buffer) {
 		super(buffer);
 	}
 

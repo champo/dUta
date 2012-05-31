@@ -1,22 +1,23 @@
 package ar.edu.itba.pdc.duta.http.model;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
 public class Message {
 
 	private MessageHeader header;
 	
-	private List<ByteBuffer> body;
+	private List<DataBuffer> body;
 
 	public Message(MessageHeader header) {
 		super();
 		this.header = header;
-		this.body = new ArrayList<ByteBuffer>();
+		this.body = new ArrayList<DataBuffer>();
 	}
 	
-	public void appendToBody(ByteBuffer buff) {
+	public void appendToBody(DataBuffer buff) {
 		body.add(buff);
 	}
 
@@ -24,11 +25,11 @@ public class Message {
 		return header;
 	}
 
-	public List<ByteBuffer> getBody() {
+	public List<DataBuffer> getBody() {
 		return body;
 	}
 
-	public void setBody(ByteBuffer buffer) {
+	public void setBody(DataBuffer buffer) {
 		body.clear();
 		body.add(buffer);
 	}
