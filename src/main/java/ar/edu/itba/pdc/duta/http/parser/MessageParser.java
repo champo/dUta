@@ -1,6 +1,7 @@
 package ar.edu.itba.pdc.duta.http.parser;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ public abstract class MessageParser {
 	private String fieldName;
 	private Map<String, StringBuilder> fields;
 	private Map<String, String> fieldNames;
+	private boolean invalidField;
 
 	public MessageParser(DataBuffer buffer) {
 
@@ -105,14 +107,22 @@ public abstract class MessageParser {
 						currString.setLength(0);
 						fieldName = WordUtils.capitalizeFully(originalFieldName, '-');
 						state = States.FIELD_VALUE;
+						invalidField = false;
 
 						if (fieldName.length() == 0) {
 							throw new ParseException("Missing field name", line);
 						}
 						
 						if (fields.containsKey(fieldName)) {
-							fields.get(fieldName).append(", ");
+
+							if (Arrays.binarySearch(Grammar.singleHeadersBlacklist, fieldName) < 0) {
+								fields.get(fieldName).append(", ");
+							} else {
+								invalidField = true;
+							}
+
 						} else {
+
 							fields.put(fieldName, new StringBuilder());
 							fieldNames.put(fieldName, originalFieldName);
 						}
@@ -132,10 +142,13 @@ public abstract class MessageParser {
 							throw new ParseException("Missing field name", line);
 						}
 
-						line++;
-						fields.get(fieldName).append(' ').append(currString);
+						if (!invalidField) {
+							fields.get(fieldName).append(' ').append(currString);
+						}
+
 						currString.setLength(0);
 						state = States.BEGINNING_OF_LINE;
+						line++;
 						break;
 					}
 					
