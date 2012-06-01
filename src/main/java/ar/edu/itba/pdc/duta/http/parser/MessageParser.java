@@ -31,6 +31,7 @@ public abstract class MessageParser {
 		this.line = 0;
 		this.currString = new StringBuilder();
 		this.fieldName = null;
+		this.fieldNames = new HashMap<String, String>();
 		this.fields = new HashMap<String, StringBuilder>();
 	}
 
