@@ -17,7 +17,6 @@ public abstract class MessageParser {
 		START_LINE, BEGINNING_OF_LINE, FIELD_NAME, FIELD_VALUE, END_OF_HEADER 
 	}
 
-	private DataBuffer buffer;
 	private States state;
 	private int line;
 	private StringBuilder currString;
@@ -26,9 +25,8 @@ public abstract class MessageParser {
 	private Map<String, String> fieldNames;
 	private boolean invalidField;
 
-	public MessageParser(DataBuffer buffer) {
+	public MessageParser() {
 
-		this.buffer = buffer;
 		this.state = States.START_LINE;
 		this.line = 0;
 		this.currString = new StringBuilder();
@@ -36,7 +34,7 @@ public abstract class MessageParser {
 		this.fields = new HashMap<String, StringBuilder>();
 	}
 
-	public boolean parse() throws ParseException, IOException {
+	public boolean parse(DataBuffer buffer) throws ParseException, IOException {
 		
 		char oldc;
 		char c = '\0';

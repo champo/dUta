@@ -30,7 +30,7 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 		if (op == null) {
 			op = new Operation(this);
 			buffer = op.getRequestBuffer();
-			parser = new RequestParser(buffer);
+			parser = new RequestParser();
 		} else if (parser == null) {
 			buffer = op.getRequestBuffer();
 		}
@@ -60,11 +60,11 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 	private void processHeader() {
 
 		if (parser == null) {
-			parser = new RequestParser(buffer);
+			parser = new RequestParser();
 		}
 		
 		try {
-			parser.parse();
+			parser.parse(buffer);
 		} catch (ParseException e) {
 			logger.error("Aborting request due to malformed headers", e);
 			close();

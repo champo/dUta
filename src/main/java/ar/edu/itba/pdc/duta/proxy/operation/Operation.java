@@ -180,9 +180,9 @@ public class Operation {
 		
 		if (responseChain == null) {
 		
-			ResponseParser parser = new ResponseParser(buffer);
+			ResponseParser parser = new ResponseParser();
 			try {
-				parser.parse();
+				parser.parse(buffer);
 			} catch (ParseException e) {
 				logger.error("Failed to parse response header", e);
 				

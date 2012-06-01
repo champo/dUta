@@ -8,17 +8,12 @@ import java.util.Scanner;
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
-import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
 public class ResponseParser extends MessageParser {
 
 	private String HTTPVersion;
 	private String reasonPhrase;
 	private int statusCode;
-
-	public ResponseParser(DataBuffer buffer) {
-		super(buffer);
-	}
 
 	@Override
 	protected MessageHeader createHeader(Map<String, String> fields, Map<String, String> fieldNames) {

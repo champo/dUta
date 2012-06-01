@@ -35,13 +35,13 @@ public class Test {
 
 		MessageParser parser;
 		
-		parser = new RequestParser(new FixedDataBuffer(request.getBytes("US-ASCII")));
-		while (!parser.parse());
+		parser = new RequestParser();
+		while (!parser.parse(new FixedDataBuffer(request.getBytes("US-ASCII"))));
 		
 		System.out.println(parser.getHeader());
 		
-		parser = new ResponseParser(new FixedDataBuffer(response.getBytes("US-ASCII")));
-		while (!parser.parse());
+		parser = new ResponseParser();
+		while (!parser.parse(new FixedDataBuffer(response.getBytes("US-ASCII"))));
 
 		System.out.println(parser.getHeader());
 	}
