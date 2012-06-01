@@ -2,6 +2,9 @@ package ar.edu.itba.pdc.duta.http.model;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.commons.lang3.text.WordUtils;
 
 public abstract class MessageHeader {
 
@@ -12,25 +15,29 @@ public abstract class MessageHeader {
 
 	protected MessageHeader(Map<String, String> fields) {
 
+		Map<String, String> normalizedFields = new HashMap<String, String>();
 		Map<String, String> fieldNames = new HashMap<String, String>();
-		
-		for(String fieldName: fields.keySet()) {
-			fieldNames.put(fieldName, fieldName);
+
+		for (Entry<String, String> field : fields.entrySet()) {
+			
+			String fieldName = WordUtils.capitalizeFully(field.getKey(), '-');
+			normalizedFields.put(fieldName, field.getValue());
+			fieldNames.put(fieldName, field.getKey());
 		}
-		
-		this.fields = fields;
+
+		this.fields = normalizedFields;
 		this.fieldNames = fieldNames;
 	}
 
 	protected MessageHeader(Map<String, String> fields, Map<String, String> fieldNames) {
-		
+
 		this.fields = fields;
 		this.fieldNames = fieldNames;
 	}
 
 	public String getField(String fieldName) {
 
-		return fields.get(fieldName);
+		return fields.get(WordUtils.capitalizeFully(fieldName, '-'));
 	}
 
 	public Map<String, String> getFields() {
@@ -40,7 +47,7 @@ public abstract class MessageHeader {
 
 	public String getFieldName(String fieldName) {
 	
-		return fieldNames.get(fieldName);
+		return fieldNames.get(WordUtils.capitalizeFully(fieldName, '-'));
 	}
 	
 	public Map<String, String> getFieldNames() {
