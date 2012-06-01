@@ -25,12 +25,12 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 		this.address = address;
 	}
 
-	public void setOp(Operation op) {
+	public synchronized void setOp(Operation op) {
 		this.op = op;
 	}
 
 	@Override
-	public void read(SocketChannel channel) throws IOException {
+	public synchronized void read(SocketChannel channel) throws IOException {
 		
 		DataBuffer buffer;
 		if (op == null) {
