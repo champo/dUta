@@ -103,6 +103,8 @@ public class ConnectionPool {
 	}
 
 	private String addressToKey(InetSocketAddress remote) {
-		return remote.getHostString() + ":" + remote.getPort();
+		
+		// TODO: fix this? or not
+		return remote.toString();
 	}
 }

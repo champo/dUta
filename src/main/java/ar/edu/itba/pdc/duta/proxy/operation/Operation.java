@@ -47,7 +47,7 @@ public class Operation {
 		requestChannel = requestChannelHandler;
 	}
 	
-	public void setRequestHeader(RequestHeader header, DataBuffer buffer) {
+	public void setRequestHeader(RequestHeader header) {
 		
 		closeRequest = Connection.checkStatus(header) == Connection.CLOSE;
 		
@@ -78,14 +78,6 @@ public class Operation {
 			writeMessage(res);
 			return;
 		}
-		
-		if (!isRequestComplete()) {
-			if (buffer.hasReadableBytes()) {
-				DataBuffer remainder = new WrappedDataBuffer(buffer, buffer.getReadIndex(), buffer.remaining());
-				addRequestData(remainder);
-			}
-		}
-		
 	}
 
 	private void writeMessage(Message res) {

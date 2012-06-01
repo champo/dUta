@@ -12,6 +12,7 @@ import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.net.AbstractChannelHandler;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.WrappedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 public class RequestChannelHandler extends AbstractChannelHandler {
@@ -28,30 +29,32 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 	public void read(SocketChannel channel) throws IOException {
 
 		if (op == null) {
+
 			op = new Operation(this);
-			buffer = op.getRequestBuffer();
 			parser = new RequestParser();
-		} else if (parser == null) {
-			buffer = op.getRequestBuffer();
 		}
-		
+
+		buffer = op.getRequestBuffer();
+
 		int read = buffer.readFrom(channel);
+		
 		if (read == -1) {
 			close();
 			return;
 		}
-		
+
 		Stats.addClientTraffic(read);
 
 		if (parser != null) {
 			processHeader();
-		} else {
-			
+		}
+
+		if (op != null && parser == null) {
+
 			op.addRequestData(buffer);
-			
+
 			if (op.isRequestComplete()) {
 				logger.debug("Detaching operation from request");
-				// If it returned true, it means the request data should be complete
 				op = null;
 			}
 		}
@@ -59,10 +62,6 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 
 	private void processHeader() {
 
-		if (parser == null) {
-			parser = new RequestParser();
-		}
-		
 		try {
 			parser.parse(buffer);
 		} catch (ParseException e) {
@@ -76,21 +75,22 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 		}
 
 		MessageHeader header = parser.getHeader();
+
 		if (header != null) {
+
 			logger.debug("Have full header, giving to op...");
 			logger.debug(header);
-			
-			op.setRequestHeader((RequestHeader) header, buffer);
-			
+
+			op.setRequestHeader((RequestHeader) header);
+
 			parser = null;
-			buffer = null;
-			
+			buffer = new WrappedDataBuffer(buffer, buffer.getReadIndex(), buffer.remaining());
+
 			if (op.isRequestComplete()) {
-				// If it returned true, it means the request data should be complete
+				logger.debug("Detaching operation from request");
 				op = null;
 			}
 		}
-		
 	}
 
 	@Override
