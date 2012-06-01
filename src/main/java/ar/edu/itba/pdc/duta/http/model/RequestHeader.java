@@ -8,6 +8,15 @@ public class RequestHeader extends MessageHeader {
 	private String method;
 	private String requestURI;
 
+	public RequestHeader(String method, String requestURI, String HTTPVersion, Map<String, String> fields, Map<String, String> fieldNames) {
+
+		super(fields, fieldNames);
+
+		this.method = method;
+		this.requestURI = requestURI;
+		this.HTTPVersion = HTTPVersion;
+	}
+
 	public RequestHeader(String method, String requestURI, String HTTPVersion, Map<String, String> fields) {
 
 		super(fields);

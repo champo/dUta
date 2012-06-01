@@ -20,9 +20,9 @@ public class RequestParser extends MessageParser {
 	}
 
 	@Override
-	protected MessageHeader createHeader(Map<String, String> fields) {
+	protected MessageHeader createHeader(Map<String, String> fields, Map<String, String> fieldNames) {
 
-		return new RequestHeader(method, requestURI, HTTPVersion, fields);
+		return new RequestHeader(method, requestURI, HTTPVersion, fields, fieldNames);
 	}
 
 	@Override

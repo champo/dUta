@@ -21,9 +21,9 @@ public class ResponseParser extends MessageParser {
 	}
 
 	@Override
-	protected MessageHeader createHeader(Map<String, String> fields) {
+	protected MessageHeader createHeader(Map<String, String> fields, Map<String, String> fieldNames) {
 
-		return new ResponseHeader(HTTPVersion, statusCode, reasonPhrase, fields);
+		return new ResponseHeader(HTTPVersion, statusCode, reasonPhrase, fields, fieldNames);
 	}
 
 	@Override

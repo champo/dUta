@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.text.WordUtils;
+
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -19,8 +21,9 @@ public abstract class MessageParser {
 	private int line;
 	private StringBuilder currString;
 	private String fieldName;
-	protected Map<String, StringBuilder> fields;
-	
+	private Map<String, StringBuilder> fields;
+	private Map<String, String> fieldNames;
+
 	public MessageParser(DataBuffer buffer) {
 
 		this.buffer = buffer;
@@ -98,8 +101,9 @@ public abstract class MessageParser {
 
 					if (c == ':') {
 
-						fieldName = currString.toString();
+						String originalFieldName = currString.toString();
 						currString.setLength(0);
+						fieldName = WordUtils.capitalizeFully(originalFieldName, '-');
 						state = States.FIELD_VALUE;
 
 						if (fieldName.length() == 0) {
@@ -110,6 +114,7 @@ public abstract class MessageParser {
 							fields.get(fieldName).append(", ");
 						} else {
 							fields.put(fieldName, new StringBuilder());
+							fieldNames.put(fieldName, originalFieldName);
 						}
 						break;
 					}
@@ -148,7 +153,7 @@ public abstract class MessageParser {
 	
 	protected abstract void setStartLine(String s) throws ParseException;
 
-	protected abstract MessageHeader createHeader(Map<String, String> fields);
+	protected abstract MessageHeader createHeader(Map<String, String> fields, Map<String, String> fieldNames2);
 	
 	public MessageHeader getHeader() {
 		
@@ -162,7 +167,7 @@ public abstract class MessageParser {
 			fields.put(field.getKey(), field.getValue().toString().trim());
 		}
 
-		return createHeader(fields);
+		return createHeader(fields, fieldNames);
 	}
 }
 
