@@ -17,7 +17,6 @@ import ar.edu.itba.pdc.duta.net.ChannelHandler;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
-import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 @ThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
@@ -35,8 +34,6 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	private RequestParser parser;
 
 	protected DataBuffer buffer;
-
-	protected Operation currentOperation;
 
 	public AbstractChannelHandler() {
 
@@ -143,12 +140,9 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	@Override
 	public void read(SocketChannel channel) throws IOException {
 
-		if (currentOperation == null) {
-
-			if (parser == null) {
-				parser = new RequestParser();
-				buffer = new FixedDataBuffer(4096);
-			}
+		if (buffer == null) {
+			parser = new RequestParser();
+			buffer = new FixedDataBuffer(4096);
 		}
 
 		int read = buffer.readFrom(channel);
@@ -164,25 +158,6 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			parseHeader();
 		} else {
 			processBody();
-		}
-
-		if (currentOperation != null) {
-
-			if (parser == null && buffer.hasReadableBytes()) {
-
-				// TODO: If it is complete, a new one should start and be
-				// queue'd
-				if (!currentOperation.isRequestComplete()) {
-					currentOperation.addRequestData(buffer);
-				} else {
-					logger.warn("Got unexpected data for a request");
-					logger.warn(buffer.toString());
-				}
-			}
-
-			if (currentOperation.isRequestComplete()) {
-				currentOperation = null;
-			}
 		}
 	}
 
@@ -213,6 +188,17 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			buffer = null;
 
 			processHeader(header);
+		}
+	}
+
+	@Override
+	public void abort() {
+
+		if (parser != null && buffer != null) {
+			buffer.collect();
+			buffer = null;
+
+			parser = null;
 		}
 	}
 
