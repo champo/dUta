@@ -2,17 +2,22 @@ package ar.edu.itba.pdc.duta.proxy;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
+import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.http.parser.ParseException;
+import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.net.ChannelHandler;
-import ar.edu.itba.pdc.duta.net.Reactor;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
+import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 @ThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
@@ -21,29 +26,41 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	protected ReactorKey key;
 
-	private Queue<DataBuffer> outputQueue;
+	private Deque<DataBuffer> outputQueue;
 
 	protected boolean close = false;
 
 	protected Object keyLock;
 
+	private RequestParser parser;
+
+	protected DataBuffer buffer;
+
+	protected Operation currentOperation;
+
 	public AbstractChannelHandler() {
-		outputQueue = new LinkedBlockingQueue<DataBuffer>();
+
+		outputQueue = new LinkedBlockingDeque<DataBuffer>();
 		key = null;
 		keyLock = new Object();
 	}
 
 	@Override
 	public void queueOutput(DataBuffer output) {
-		outputQueue.add(output);
-		
+
+		synchronized (outputQueue) {
+			if (outputQueue.peekLast() != output) {
+				outputQueue.addLast(output);
+			}
+		}
+
 		synchronized (keyLock) {
 			if (key != null) {
 				key.setInterest(true, true);
 			}
 		}
 	}
-	
+
 	public abstract void wroteBytes(long bytes);
 
 	@Override
@@ -51,7 +68,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 		while (!outputQueue.isEmpty()) {
 
-			DataBuffer buffer = outputQueue.peek();
+			DataBuffer buffer = outputQueue.peekFirst();
 			try {
 				wroteBytes(buffer.writeTo(channel));
 			} catch (IOException e) {
@@ -65,10 +82,11 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			}
 
 			if (buffer.hasReadableBytes()) {
-				// If we didn't write the whole thing, the socket won't accept more
+				// If we didn't write the whole thing, the socket won't accept
+				// more
 				break;
 			} else {
-				outputQueue.remove();
+				outputQueue.removeFirst();
 			}
 		}
 
@@ -103,17 +121,18 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			}
 		}
 	}
-	
+
 	public void close() {
 		close = true;
 
 		synchronized (keyLock) {
-			
+
 			if (key != null && !outputQueue.isEmpty()) {
-				//FIXME: Somehow, the correct value for the interest is lost sometimes
+				// FIXME: Somehow, the correct value for the interest is lost
+				// sometimes
 				key.setInterest(true, true);
 			}
-			
+
 			if (key != null && outputQueue.isEmpty()) {
 				logger.debug("Closed");
 				key.close();
@@ -121,4 +140,83 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		}
 	}
 
+	@Override
+	public void read(SocketChannel channel) throws IOException {
+
+		if (currentOperation == null) {
+
+			if (parser == null) {
+				parser = new RequestParser();
+				buffer = new FixedDataBuffer(4096);
+			}
+		}
+
+		int read = buffer.readFrom(channel);
+
+		if (read == -1) {
+			abort();
+			return;
+		}
+
+		Stats.addClientTraffic(read);
+
+		if (parser != null) {
+			parseHeader();
+		} else {
+			processBody();
+		}
+
+		if (currentOperation != null) {
+
+			if (parser == null && buffer.hasReadableBytes()) {
+
+				// TODO: If it is complete, a new one should start and be
+				// queue'd
+				if (!currentOperation.isRequestComplete()) {
+					currentOperation.addRequestData(buffer);
+				} else {
+					logger.warn("Got unexpected data for a request");
+					logger.warn(buffer.toString());
+				}
+			}
+
+			if (currentOperation.isRequestComplete()) {
+				currentOperation = null;
+			}
+		}
+	}
+
+	private void parseHeader() {
+
+		try {
+			parser.parse(buffer);
+		} catch (ParseException e) {
+			logger.error("Aborting request due to malformed headers", e);
+			close();
+			return;
+		} catch (IOException e) {
+			logger.error("Failed to read headers, aborting", e);
+			close();
+			return;
+		}
+
+		MessageHeader header = parser.getHeader();
+
+		if (header != null) {
+
+			logger.debug("Have full header...");
+			logger.debug(header);
+
+			parser = null;
+
+			buffer.collect();
+			buffer = null;
+
+			processHeader(header);
+		}
+	}
+
+	protected abstract void processHeader(MessageHeader header);
+
+	protected abstract void processBody();
 }
