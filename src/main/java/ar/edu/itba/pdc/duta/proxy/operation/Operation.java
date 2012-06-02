@@ -93,10 +93,7 @@ public class Operation {
 			return;
 		}
 
-		for (DataBuffer buffer : res.getBody()) {
-			clientHandler.queueOutput(buffer);
-		}
-
+		clientHandler.queueOutput(res.getBody());
 		close();
 	}
 

@@ -14,11 +14,11 @@ public class ChannelProxy implements OutputChannel {
 	private static final Logger logger = Logger.getLogger(ChannelProxy.class);
 
 	private InetSocketAddress address;
-	
+
 	private Operation op;
 
 	private ServerHandler channel;
-	
+
 	public ChannelProxy(InetSocketAddress address, Operation op) {
 		super();
 		this.address = address;
@@ -27,11 +27,11 @@ public class ChannelProxy implements OutputChannel {
 
 	@Override
 	public void queueOutput(DataBuffer buff) {
-		
+
 		if (channel == null) {
 			openChannel();
 		}
-		
+
 		logger.debug("Queueing output: " + buff);
 		channel.queueOutput(buff);
 	}
@@ -39,9 +39,9 @@ public class ChannelProxy implements OutputChannel {
 	private void openChannel() {
 		logger.debug("Opening channel...");
 		channel = Server.getConnectionPool().getConnection(address);
-		channel.setOp(op);
+		channel.setCurrentOperation(op);
 	}
-	
+
 	public ServerHandler getChannel() {
 		return channel;
 	}

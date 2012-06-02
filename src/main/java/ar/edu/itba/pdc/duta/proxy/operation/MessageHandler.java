@@ -1,6 +1,5 @@
 package ar.edu.itba.pdc.duta.proxy.operation;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -10,7 +9,6 @@ import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
-import ar.edu.itba.pdc.duta.net.buffer.FileDataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 
 public class MessageHandler {
@@ -25,11 +23,7 @@ public class MessageHandler {
 
 	private OutputChannel outputChannel;
 
-	private DataBuffer buffer;
-
 	private boolean complete;
-
-	private int bodySize;
 
 	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel) {
 		this.filters = filters;
@@ -37,7 +31,6 @@ public class MessageHandler {
 		this.outputChannel = outputChannel;
 
 		complete = false;
-		bodySize = 0;
 
 		for (OperationFilter filter : filters) {
 			logger.debug("Filter " + filter.part);
@@ -45,7 +38,6 @@ public class MessageHandler {
 				needsBody = true;
 			}
 		}
-		logger.debug(header.toString());
 		logger.debug("Needs body: " + needsBody);
 	}
 
@@ -61,18 +53,8 @@ public class MessageHandler {
 			}
 		}
 
-		if (needsBody) {
-
-			if (getLength() > 20 * 1024 * 1024) {
-
-				try {
-					buffer = new FileDataBuffer();
-				} catch (IOException e) {
-					logger.warn("Failed to allocate a FileDataBuffer, falling back to memory storage", e);
-				}
-			}
-
-		} else {
+		// TODO: Create the buffer as needed
+		if (!needsBody) {
 			Message res = writeHeader();
 			if (res != null) {
 				return res;
@@ -94,45 +76,19 @@ public class MessageHandler {
 	}
 
 	private void checkCompletion() {
-
-		MessageHeader header = msg.getHeader();
-
-		String encoding = header.getField("Transfer-Encoding");
-		int len = getLength();
-
-		if (len != -1) {
-			complete = len <= bodySize;
-		} else if (encoding == null || encoding.isEmpty() || "identity".equals(encoding)) {
-			complete = true;
-		} else {
-			// TODO: Chuncked sucks
-		}
-	}
-
-	private int getLength() {
-		String length = msg.getHeader().getField("Content-Length");
-
-		int len = 0;
-		try {
-			len = Integer.parseInt(length);
-		} catch (NumberFormatException e) {
-			len = -1;
-		}
-		return len;
+		complete = msg.isComplete();
 	}
 
 	public Message append(Operation op) {
 
-		bodySize += buff.remaining();
 		if (!needsBody) {
-			outputChannel.queueOutput(buff);
+			outputChannel.queueOutput(msg.getBody());
 		} else {
 
-			msg.appendToBody(buff);
 			for (OperationFilter filter : filters) {
 
 				if (filter.interest.bytesRecieved()) {
-					Message result = filter.part.bytesRecieved(op, msg, buff.remaining(), bodySize);
+					Message result = filter.part.bytesRecieved(op, msg);
 					if (result != null) {
 						return result;
 					}
@@ -148,7 +104,7 @@ public class MessageHandler {
 		return null;
 	}
 
-	public Message filter(Operation op) {
+	private Message filter(Operation op) {
 
 		if (!needsBody) {
 			return null;
@@ -169,9 +125,7 @@ public class MessageHandler {
 			return res;
 		}
 
-		for (DataBuffer buff : msg.getBody()) {
-			outputChannel.queueOutput(buff);
-		}
+		outputChannel.queueOutput(msg.getBody());
 
 		return null;
 	}
@@ -198,10 +152,7 @@ public class MessageHandler {
 	}
 
 	public DataBuffer getBuffer() {
-		if (buffer != null) {
-			return buffer;
-		}
-		return new FixedDataBuffer(8192);
+		return msg.getBody();
 	}
 
 }
