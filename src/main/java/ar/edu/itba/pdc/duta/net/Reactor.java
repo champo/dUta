@@ -98,15 +98,18 @@ public class Reactor implements Runnable {
 				key.attach(null);
 			}
 			
-		} catch (IOException e) {
-			
+		} catch (Exception e) {
 			logger.warn("Closing socket due to catched exception", e);
+			
+			handler.close();
+			key.attach(null);
 			
 			try {
 				channel.close();
 			} catch (IOException t) {
-				logger.error("Failed to close channel after force close due to catching an IOException", t);
+				logger.error("Failed to close channel after force close due to catching an Exception", t);
 			}
+			
 			key.cancel();
 		}
 	}

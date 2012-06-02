@@ -14,5 +14,9 @@ public interface ChannelHandler extends OutputChannel {
 	public void setKey(ReactorKey key);
 
 	public ReactorKey getKey();
+	
+	public void close();
+	
+	public void abort();
 
 }

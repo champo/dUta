@@ -40,17 +40,7 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 		}
 		int read = buffer.readFrom(channel);
 		if (read == -1) {
-			
-			logger.debug("Got closed, removing myself from the world!");
-			if (op != null) {
-				op.close();
-			}
-			
-			Stats.closeOutbound();
-			
-			Server.getConnectionPool().remove(this);
-			close();
-			
+			abort();
 			return;
 		}
 		
@@ -63,6 +53,26 @@ public class ResponseChannelHandler extends AbstractChannelHandler {
 
 	public InetSocketAddress getAddress() {
 		return address;
+	}
+	
+	@Override
+	public void close() {
+		
+		Server.getConnectionPool().remove(this);
+		Stats.closeOutbound();
+		
+		super.close();
+	}
+	
+	@Override
+	public void abort() {
+		
+		logger.debug("Got closed, removing myself from the world!");
+		if (op != null) {
+			op.close();
+		}
+		
+		close();
 	}
 
 	@Override

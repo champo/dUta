@@ -39,7 +39,7 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 		int read = buffer.readFrom(channel);
 		
 		if (read == -1) {
-			close();
+			abort();
 			return;
 		}
 
@@ -49,13 +49,14 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			processHeader();
 		}
 
-		if (op != null && parser == null) {
-
-			op.addRequestData(buffer);
-
-			if (op.isRequestComplete()) {
-				logger.debug("Detaching operation from request");
-				op = null;
+		if (op != null && parser == null && buffer.hasReadableBytes()) {
+			
+			//TODO: If it is complete, a new one should start and be queue'd
+			if  (!op.isRequestComplete()) {
+				op.addRequestData(buffer);
+			} else {
+				logger.warn("Got unexpected data for a request");
+				logger.warn(buffer.toString());
 			}
 		}
 	}
@@ -84,11 +85,8 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			op.setRequestHeader((RequestHeader) header);
 
 			parser = null;
-			buffer = new WrappedDataBuffer(buffer, buffer.getReadIndex(), buffer.remaining());
-
-			if (op.isRequestComplete()) {
-				logger.debug("Detaching operation from request");
-				op = null;
+			if (buffer.hasReadableBytes()) {
+				buffer = new WrappedDataBuffer(buffer, buffer.getReadIndex(), buffer.remaining());
 			}
 		}
 	}
@@ -99,9 +97,22 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 		Stats.closeInbound();
 	}
 	
+	@Override
+	public void abort() {
+		op.abort();
+		op = null;
+		
+		close();
+	}
+	
 
 	@Override
 	public void wroteBytes(long bytes) {
 		Stats.addClientTraffic(bytes);
+	}
+
+	public void operationComplete() {
+		logger.debug("Detaching from op...");
+		op = null;
 	}
 }

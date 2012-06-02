@@ -19,6 +19,7 @@ import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.WrappedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
+import ar.edu.itba.pdc.duta.proxy.ResponseChannelHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
@@ -120,7 +121,6 @@ public class Operation {
 		}
 	}
 
-
 	private void buildFilterList(RequestHeader header) {
 		//FIXME: Get this from somewhere else
 		filters = new ArrayList<Filter>();
@@ -128,8 +128,24 @@ public class Operation {
 		//filters.add(new L33tFilter());
 		//filters.add(new BlockFilter());
 	}
-
 	
+	public void abort() {
+		
+		if (responseProxy != null && responseProxy.getChannel() != null) {
+			ResponseChannelHandler handler = responseProxy.getChannel();
+			
+			handler.setOp(null);
+			handler.close();
+		}
+		
+		if (requestChannel != null) {
+			requestChannel.operationComplete();
+			requestChannel.close();
+		}
+		
+		//TODO: Make sure all buffers are cleaned up by asking the chains to do so
+	}
+
 	public void close() {
 		
 		if (responseProxy != null && responseProxy.getChannel() != null) {
@@ -149,8 +165,13 @@ public class Operation {
 		}
 		responseChain = null;
 		
-		if (requestChannel != null && closeRequest) { 
-			requestChannel.close();
+		if (requestChannel != null) {
+			
+			requestChannel.operationComplete();
+			if (closeRequest) { 
+				requestChannel.close();
+			}
+			
 		}
 		requestChannel = null;
 		

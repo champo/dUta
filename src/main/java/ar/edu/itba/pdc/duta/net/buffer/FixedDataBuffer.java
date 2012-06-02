@@ -103,4 +103,8 @@ public class FixedDataBuffer extends AbstractDataBuffer {
 		buffer.get(bytes, offset, count);
 	}
 
+	@Override
+	public String toString() {
+		return new String(buffer.array());
+	}
 }
