@@ -12,7 +12,6 @@ import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.http.parser.RequestParser;
-import ar.edu.itba.pdc.duta.net.AbstractChannelHandler;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.WrappedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;

@@ -1,4 +1,4 @@
-package ar.edu.itba.pdc.duta.net;
+package ar.edu.itba.pdc.duta.proxy;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
@@ -9,6 +9,8 @@ import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.net.ChannelHandler;
+import ar.edu.itba.pdc.duta.net.Reactor;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
