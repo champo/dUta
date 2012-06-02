@@ -23,6 +23,7 @@ import ar.edu.itba.pdc.duta.proxy.ResponseChannelHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
+import ar.edu.itba.pdc.duta.proxy.filter.http.MediaTypeFilter;
 
 public class Operation {
 	
@@ -127,6 +128,7 @@ public class Operation {
 		filters.add(new HttpFilter());
 		//filters.add(new L33tFilter());
 		//filters.add(new BlockFilter());
+		//filters.add(new MediaTypeFilter("image/jpeg"));
 	}
 	
 	public void abort() {
