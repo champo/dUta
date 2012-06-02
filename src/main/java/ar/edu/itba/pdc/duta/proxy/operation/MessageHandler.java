@@ -13,9 +13,9 @@ import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FileDataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 
-public class FilterChain {
+public class MessageHandler {
 	
-	private static final Logger logger = Logger.getLogger(FilterChain.class);
+	private static final Logger logger = Logger.getLogger(MessageHandler.class);
 	
 	private List<OperationFilter> filters;
 	
@@ -31,7 +31,7 @@ public class FilterChain {
 	
 	private int bodySize;
 	
-	public FilterChain(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel) {
+	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel) {
 		this.filters = filters;
 		this.msg = new Message(header);
 		this.outputChannel = outputChannel;

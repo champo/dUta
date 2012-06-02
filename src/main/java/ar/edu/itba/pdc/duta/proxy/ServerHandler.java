@@ -14,15 +14,15 @@ import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
-public class ResponseChannelHandler extends AbstractChannelHandler implements OutputChannel {
+public class ServerHandler extends AbstractChannelHandler implements OutputChannel {
 
-	private static Logger logger = Logger.getLogger(ResponseChannelHandler.class);
+	private static Logger logger = Logger.getLogger(ServerHandler.class);
 	
 	private Operation op;
 
 	private InetSocketAddress address;
 
-	public ResponseChannelHandler(InetSocketAddress address) {
+	public ServerHandler(InetSocketAddress address) {
 		this.address = address;
 	}
 

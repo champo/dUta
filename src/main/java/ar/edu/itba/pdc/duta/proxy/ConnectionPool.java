@@ -15,19 +15,19 @@ public class ConnectionPool {
 	
 	private static final Logger logger = Logger.getLogger(ConnectionPool.class);
 	
-	private Map<String, Queue<ResponseChannelHandler>> pool;
+	private Map<String, Queue<ServerHandler>> pool;
 	
 	public ConnectionPool() {
 		super();
-		this.pool = new HashMap<String, Queue<ResponseChannelHandler>>();
+		this.pool = new HashMap<String, Queue<ServerHandler>>();
 	}
 
-	public ResponseChannelHandler getConnection(InetSocketAddress remote) {
+	public ServerHandler getConnection(InetSocketAddress remote) {
 		
 		synchronized (pool) {
 			
 			String key = addressToKey(remote);
-			Queue<ResponseChannelHandler> list = pool.get(key);
+			Queue<ServerHandler> list = pool.get(key);
 			if (list != null && list.size() > 0) {
 				
 				if (list.size() == 1) {
@@ -43,13 +43,13 @@ public class ConnectionPool {
 		
 	}
 	
-	public void registerConnection(ResponseChannelHandler handler) {
+	public void registerConnection(ServerHandler handler) {
 		
 		synchronized (pool) {
 			handler.setOp(null);
 			
 			String key = addressToKey(handler.getAddress());
-			Queue<ResponseChannelHandler> list = pool.get(key);
+			Queue<ServerHandler> list = pool.get(key);
 			
 			if (list != null) {
 				
@@ -58,7 +58,7 @@ public class ConnectionPool {
 					list.add(handler);
 				}
 			} else {
-				list = new ArrayDeque<ResponseChannelHandler>(4);
+				list = new ArrayDeque<ServerHandler>(4);
 				list.add(handler);
 				logger.debug("Storing connection to " + key);
 				
@@ -67,11 +67,11 @@ public class ConnectionPool {
 		}
 	}
 	
-	private ResponseChannelHandler newConnection(InetSocketAddress remote) {
+	private ServerHandler newConnection(InetSocketAddress remote) {
 		
 		logger.debug("Boring new connection");
 		try {
-			ResponseChannelHandler response = new ResponseChannelHandler(remote);
+			ServerHandler response = new ServerHandler(remote);
 			
 			Server.newConnection(remote, response);
 			Stats.newOutbound();
@@ -84,13 +84,13 @@ public class ConnectionPool {
 		return null;
 	}
 
-	public void remove(ResponseChannelHandler handler) {
+	public void remove(ServerHandler handler) {
 		
 		synchronized (pool) {
 			handler.setOp(null);
 			
 			String key = addressToKey(handler.getAddress());
-			Queue<ResponseChannelHandler> list = pool.get(key);
+			Queue<ServerHandler> list = pool.get(key);
 			
 			if (list != null) {
 				list.remove(handler);

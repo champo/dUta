@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
-import ar.edu.itba.pdc.duta.proxy.ResponseChannelHandler;
+import ar.edu.itba.pdc.duta.proxy.ServerHandler;
 
 public class ChannelProxy implements OutputChannel {
 
@@ -17,7 +17,7 @@ public class ChannelProxy implements OutputChannel {
 	
 	private Operation op;
 
-	private ResponseChannelHandler channel;
+	private ServerHandler channel;
 	
 	public ChannelProxy(InetSocketAddress address, Operation op) {
 		super();
@@ -42,7 +42,7 @@ public class ChannelProxy implements OutputChannel {
 		channel.setOp(op);
 	}
 	
-	public ResponseChannelHandler getChannel() {
+	public ServerHandler getChannel() {
 		return channel;
 	}
 }

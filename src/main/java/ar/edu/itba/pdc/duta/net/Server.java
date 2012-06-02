@@ -15,7 +15,7 @@ import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.proxy.ConnectionPool;
-import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
+import ar.edu.itba.pdc.duta.proxy.ClientHandler;
 
 
 @ThreadSafe
@@ -69,7 +69,7 @@ public class Server {
 						if (socket != null) {
 							
 							Stats.newInbound();
-							ChannelHandler handler = new RequestChannelHandler();
+							ChannelHandler handler = new ClientHandler();
 							
 							socket.socket().setTcpNoDelay(true);
 							getReactor().addChannel(socket, handler);

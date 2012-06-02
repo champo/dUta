@@ -17,9 +17,9 @@ import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.WrappedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
-public class RequestChannelHandler extends AbstractChannelHandler {
+public class ClientHandler extends AbstractChannelHandler {
 
-	private static Logger logger = Logger.getLogger(RequestChannelHandler.class);
+	private static Logger logger = Logger.getLogger(ClientHandler.class);
 
 	private RequestParser parser;
 
@@ -29,7 +29,7 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 	
 	private Operation currentOp;
 
-	public RequestChannelHandler() {
+	public ClientHandler() {
 		super();
 		ops = new ArrayDeque<Operation>();
 	}
