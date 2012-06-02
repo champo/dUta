@@ -8,12 +8,13 @@ import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.net.AbstractChannelHandler;
+import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
-public class ResponseChannelHandler extends AbstractChannelHandler {
+public class ResponseChannelHandler extends AbstractChannelHandler implements OutputChannel {
 
 	private static Logger logger = Logger.getLogger(ResponseChannelHandler.class);
 	

@@ -2,6 +2,8 @@ package ar.edu.itba.pdc.duta.proxy;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 import org.apache.log4j.Logger;
 
@@ -21,20 +23,28 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 
 	private RequestParser parser;
 
-	private Operation op;
+	private Queue<Operation> ops;
 
-	private DataBuffer buffer;
+	private DataBuffer buffer; 
+	
+	private Operation currentOp;
+
+	public RequestChannelHandler() {
+		super();
+		ops = new ArrayDeque<Operation>();
+	}
 
 	@Override
 	public void read(SocketChannel channel) throws IOException {
 
-		if (op == null) {
-
-			op = new Operation(this);
+		if (currentOp == null) {
+			currentOp = new Operation(this);
+			ops.add(currentOp);
+			
 			parser = new RequestParser();
 		}
 
-		buffer = op.getRequestBuffer();
+		buffer = currentOp.getRequestBuffer();
 
 		int read = buffer.readFrom(channel);
 		
@@ -49,14 +59,21 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			processHeader();
 		}
 
-		if (op != null && parser == null && buffer.hasReadableBytes()) {
+		if (currentOp != null) {
 			
-			//TODO: If it is complete, a new one should start and be queue'd
-			if  (!op.isRequestComplete()) {
-				op.addRequestData(buffer);
-			} else {
-				logger.warn("Got unexpected data for a request");
-				logger.warn(buffer.toString());
+			if (parser == null && buffer.hasReadableBytes()) {
+			
+				//TODO: If it is complete, a new one should start and be queue'd
+				if  (!currentOp.isRequestComplete()) {
+					currentOp.addRequestData(buffer);
+				} else {
+					logger.warn("Got unexpected data for a request");
+					logger.warn(buffer.toString());
+				}
+			}
+			
+			if (currentOp.isRequestComplete()) {
+				currentOp = null;
 			}
 		}
 	}
@@ -82,7 +99,7 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 			logger.debug("Have full header, giving to op...");
 			logger.debug(header);
 
-			op.setRequestHeader((RequestHeader) header);
+			currentOp.setRequestHeader((RequestHeader) header);
 
 			parser = null;
 			if (buffer.hasReadableBytes()) {
@@ -99,13 +116,14 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 	
 	@Override
 	public void abort() {
-		op.abort();
-		op = null;
+		currentOp = null;
+		for (Operation op : ops) {
+			op.abort();
+		}
 		
 		close();
 	}
 	
-
 	@Override
 	public void wroteBytes(long bytes) {
 		Stats.addClientTraffic(bytes);
@@ -113,6 +131,13 @@ public class RequestChannelHandler extends AbstractChannelHandler {
 
 	public void operationComplete() {
 		logger.debug("Detaching from op...");
-		op = null;
+		ops.poll();
+	}
+	
+	private static class Request {
+		
+		Operation op;
+		
+		
 	}
 }
