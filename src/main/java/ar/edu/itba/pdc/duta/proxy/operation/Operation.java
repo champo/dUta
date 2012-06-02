@@ -18,8 +18,8 @@ import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.WrappedDataBuffer;
-import ar.edu.itba.pdc.duta.proxy.RequestChannelHandler;
-import ar.edu.itba.pdc.duta.proxy.ResponseChannelHandler;
+import ar.edu.itba.pdc.duta.proxy.ClientHandler;
+import ar.edu.itba.pdc.duta.proxy.ServerHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
@@ -28,15 +28,15 @@ public class Operation {
 	
 	private static final Logger logger = Logger.getLogger(Operation.class);
 
-	private RequestChannelHandler requestChannel;
+	private ClientHandler requestChannel;
 	
 	private List<Filter> filters;
 	
 	private boolean closed = false;
 
-	private FilterChain requestChain;
+	private MessageHandler requestChain;
 
-	private FilterChain responseChain;
+	private MessageHandler responseChain;
 
 	private boolean closeResponse = false;
 	
@@ -44,7 +44,7 @@ public class Operation {
 
 	private ChannelProxy responseProxy;
 	
-	public Operation(RequestChannelHandler requestChannelHandler) {
+	public Operation(ClientHandler requestChannelHandler) {
 		requestChannel = requestChannelHandler;
 	}
 	
@@ -72,7 +72,7 @@ public class Operation {
 		logger.debug("Destination address: " + address);
 		
 		responseProxy = new ChannelProxy(address, this);
-		requestChain = new FilterChain(header, requestFilters, responseProxy);
+		requestChain = new MessageHandler(header, requestFilters, responseProxy);
 		
 		Message res = requestChain.processHeader(this);
 		if (res != null) {
@@ -132,7 +132,7 @@ public class Operation {
 	public void abort() {
 		
 		if (responseProxy != null && responseProxy.getChannel() != null) {
-			ResponseChannelHandler handler = responseProxy.getChannel();
+			ServerHandler handler = responseProxy.getChannel();
 			
 			handler.setOp(null);
 			handler.close();
@@ -226,7 +226,7 @@ public class Operation {
 				}
 			}
 
-			responseChain = new FilterChain(header, responseFilters, requestChannel);
+			responseChain = new MessageHandler(header, responseFilters, requestChannel);
 			Message res = responseChain.processHeader(this);
 			if (res != null) {
 				writeMessage(res);
