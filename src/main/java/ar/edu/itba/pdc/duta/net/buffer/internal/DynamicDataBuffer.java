@@ -42,7 +42,6 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 	@Override
 	public void read(int count) throws IOException {
 
-		//logger.debug("got a read with count " + count);
 		if (count == 0) {
 			return;
 		}
@@ -53,12 +52,12 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		int endPos = (capacity + writeIndex + count - 1) % capacity + 1;
 		int readBytes;
 
-		//logger.debug(buffer);
 		for (int pos = buffer.size(); pos <= endIndex; pos++) {
 			buffer.add(ByteBuffer.allocate(capacity));
 		}
 
 		ByteBuffer aux = buffer.get(startIndex);
+		aux.limit(capacity);
 		aux.position(startPos);
 
 		if (startIndex == endIndex) {
@@ -75,8 +74,6 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		}
 
 		aux.limit(capacity);
-		//logger.debug(buffer);
-		//logger.debug("startIndex " + startIndex + " startPos " + startPos + " endIndex " + endIndex + " endPos " + endPos);
 		readBytes = inputChannel.read(aux);
 
 		if (readBytes == -1) {
@@ -131,6 +128,7 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		int writtenBytes;
 
 		ByteBuffer aux = buffer.get(startIndex);
+		aux.limit(capacity);
 		aux.position(startPos);
 
 		if (startIndex == endIndex) {
@@ -191,6 +189,7 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		int endPos = (capacity + end - 1) % capacity + 1;
 
 		ByteBuffer aux = this.buffer.get(startIndex);
+		aux.limit(capacity);
 		aux.position(startPos);
 
 		if (startIndex == endIndex) {
