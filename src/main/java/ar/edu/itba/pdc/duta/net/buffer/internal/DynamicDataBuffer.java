@@ -52,7 +52,7 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		int endPos = (capacity + writeIndex + count - 1) % capacity + 1;
 		int readBytes;
 
-		for (int pos = buffer.size(); pos <= endIndex; pos++) {
+		if (startIndex >= buffer.size()) {
 			buffer.add(ByteBuffer.allocate(capacity));
 		}
 
@@ -88,6 +88,10 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 
 		for (int index = startIndex + 1; index < endIndex; index++) {
 
+			if (index >= buffer.size()) {
+				buffer.add(ByteBuffer.allocate(capacity));
+			}
+
 			aux = buffer.get(index);
 			aux.position(0);
 			aux.limit(capacity);
@@ -102,6 +106,10 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 			if (readBytes < capacity) {
 				return;
 			}
+		}
+
+		if (endIndex >= buffer.size()) {
+			buffer.add(ByteBuffer.allocate(capacity));
 		}
 
 		aux = buffer.get(endIndex);
