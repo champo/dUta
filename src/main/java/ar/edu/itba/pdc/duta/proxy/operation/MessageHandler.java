@@ -9,7 +9,6 @@ import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
-import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 
 public class MessageHandler {
 
@@ -134,7 +133,7 @@ public class MessageHandler {
 
 		logger.debug("Writing header " + msg.getHeader());
 		try {
-			FixedDataBuffer buffer = new FixedDataBuffer(msg.getHeader().toString().getBytes("ascii"));
+			DataBuffer buffer = new DataBuffer(msg.getHeader().toString().getBytes("ascii"));
 			outputChannel.queueOutput(buffer);
 			buffer.release();
 			

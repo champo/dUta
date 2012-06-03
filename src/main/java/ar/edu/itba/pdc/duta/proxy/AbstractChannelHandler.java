@@ -16,7 +16,6 @@ import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.net.ChannelHandler;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
-import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 
 @ThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
@@ -68,8 +67,13 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 			DataBuffer buffer = outputQueue.peekFirst();
 			try {
-				wroteBytes(buffer.writeTo(channel));
+
+				int pos = buffer.getReadIndex();
+				buffer.writeTo(channel);
+				wroteBytes(buffer.getReadIndex() - pos);
+
 			} catch (IOException e) {
+
 				logger.warn("Writing to socket failed.", e);
 
 				// This should mean the pipe was broken. We bail in that case.
@@ -143,17 +147,9 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 		if (buffer == null) {
 			parser = new RequestParser();
-			buffer = new FixedDataBuffer(4096);
+			buffer = new DataBuffer();
+			buffer.readFrom(channel);
 		}
-
-		int read = buffer.readFrom(channel);
-
-		if (read == -1) {
-			abort();
-			return;
-		}
-
-		Stats.addClientTraffic(read);
 
 		if (parser != null) {
 			parseHeader();
@@ -163,6 +159,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	}
 
 	private void parseHeader() {
+
+		int pos = buffer.getWriteIndex();
 
 		try {
 			parser.parse(buffer);
@@ -175,6 +173,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			close();
 			return;
 		}
+
+		Stats.addClientTraffic(buffer.getWriteIndex() - pos);
 
 		MessageHeader header = parser.getHeader();
 

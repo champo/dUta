@@ -40,10 +40,17 @@ public abstract class MessageParser {
 		char oldc;
 		char c = '\0';
 
-		while (state != States.END_OF_HEADER && buffer.hasReadableBytes()) {
+		while (state != States.END_OF_HEADER) {
+
+			int pos = buffer.getWriteIndex();
+			byte b = buffer.get();
+
+			if (pos >= buffer.getWriteIndex()) {
+				break;
+			}
 
 			oldc = c;
-			c = (char)buffer.get();
+			c = (char)b;
 			
 			switch (state) {
 				

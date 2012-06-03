@@ -13,7 +13,6 @@ import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
-import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.ClientHandler;
 import ar.edu.itba.pdc.duta.proxy.ServerHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
@@ -84,7 +83,7 @@ public class Operation {
 		logger.debug("Got a response message from a filter. Headers are: " + res.getHeader());
 
 		try {
-			FixedDataBuffer buffer = new FixedDataBuffer(res.getHeader().toString().getBytes("ascii"));
+			DataBuffer buffer = new DataBuffer(res.getHeader().toString().getBytes("ascii"));
 			clientHandler.queueOutput(buffer);
 			buffer.release();
 		} catch (UnsupportedEncodingException e) {

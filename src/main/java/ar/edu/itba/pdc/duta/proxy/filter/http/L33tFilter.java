@@ -10,7 +10,6 @@ import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
-import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.Interest;
@@ -81,7 +80,7 @@ public class L33tFilter implements Filter {
 
 			body = body.replace('e', '3').replace('a', '4').replace('i', '1').replace('o', '0');
 
-			msg.setBody(new FixedDataBuffer(body.getBytes(charset)));
+			msg.setBody(new DataBuffer(body.getBytes(charset)));
 
 			return null;
 		}
