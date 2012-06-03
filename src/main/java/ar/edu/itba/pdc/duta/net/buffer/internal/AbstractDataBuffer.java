@@ -1,6 +1,5 @@
 package ar.edu.itba.pdc.duta.net.buffer.internal;
 
-import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
@@ -62,17 +61,5 @@ public abstract class AbstractDataBuffer implements InternalDataBuffer {
 
 		writeIndex = index;
 	}
-
-	@Override
-	public abstract void read(int count) throws IOException;
-
-	@Override
-	public abstract void get(int pos, byte[] buffer, int offset, int count) throws IOException;
-
-	@Override
-	public abstract void write() throws IOException;
-
-	@Override
-	public abstract void collect();
 
 }
