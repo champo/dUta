@@ -18,7 +18,7 @@ public class Http10Parser implements BodyParser {
 		DataBuffer body = msg.getBody();
 		
 		int old = body.getWriteIndex();
-		body.consume();
+		body.consume(Short.MAX_VALUE);
 		return body.getWriteIndex() - old;
 	}
 
