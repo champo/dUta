@@ -1,5 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
+import java.net.InetSocketAddress;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,27 +11,26 @@ import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
-import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.Interest;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
-public class URIFilter implements Filter {
+public class IPFilter implements Filter {
 	
 	{
-		Stats.registerFilterType(URIFilter.class);
+		Stats.registerFilterType(IPFilter.class);
 	}
 
 	private final Pattern pattern; 
 	private boolean blocked=false;
 	
-	public URIFilter(String uriBlocked) {
+	public IPFilter(String ipBlocked) {
 		super();
 		Pattern p;
 		try{
-			p = Pattern.compile(uriBlocked);
+			p = Pattern.compile(ipBlocked);
 		} catch (PatternSyntaxException pE) {
 			//invalid regular expression
 			p = null;
@@ -62,11 +62,18 @@ public class URIFilter implements Filter {
 				return null;
 			}
 			
-			RequestHeader request = (RequestHeader) header;
+//TODO		InetSocketAddress inetSocketAdd = op.getInetSocketAdd();
+			InetSocketAddress inetSocketAdd = new InetSocketAddress(header.getField("host"), 8080);
 			
-			String url = header.getField("host") + request.getRequestURI();
 			
-			if(pattern.matcher(url).find()){
+			byte [] IPAddressRaw =  inetSocketAdd.getAddress().getAddress();
+			
+			long[] IPAddress = 	{(IPAddressRaw [0] & 0xFF), (IPAddressRaw [1] & 0xFF),
+								(IPAddressRaw [2] & 0xFF), (IPAddressRaw [3] &  0xFF)};
+
+			String ip = IPAddress[0] + "." + IPAddress[1] + "." + IPAddress[2] + "." + IPAddress[3];
+			
+			if(pattern.matcher(ip).find()){
 				blocked = true;
 			}
 			

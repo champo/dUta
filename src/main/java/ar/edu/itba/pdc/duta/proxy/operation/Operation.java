@@ -23,6 +23,7 @@ import ar.edu.itba.pdc.duta.proxy.ServerHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
+import ar.edu.itba.pdc.duta.proxy.filter.http.IPFilter;
 import ar.edu.itba.pdc.duta.proxy.filter.http.URIFilter;
 
 public class Operation {
@@ -129,7 +130,7 @@ public class Operation {
 		//filters.add(new L33tFilter());
 		//filters.add(new BlockFilter());
 		//filters.add(new MediaTypeFilter("image/jpeg"));
-		//filters.add(new URIFilter("www.google.com.ar"));
+		//filters.add(new IPFilter("69.171.247.53"));
 		
 		
 	}
