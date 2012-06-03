@@ -25,6 +25,14 @@ public class Stats {
 	
 	private static Map<Class<? extends Filter>, Long> filterMatches= new HashMap<Class<? extends Filter>, Long>();
 	
+	public static synchronized long getClientTraffic() {
+		return clientTraffic;
+	}
+	
+	public static synchronized long getServerTraffic() {
+		return serverTraffic;
+	}
+	
 	public static synchronized void newInbound() {
 		inbound++;
 	}
@@ -69,5 +77,13 @@ public class Stats {
 	
 	public static synchronized void applyFilter(Class<? extends Filter> filter) {
 		filterMatches.put(filter, filterMatches.get(filter) + 1L);
+	}
+
+	public static synchronized long getServerChannels() {
+		return outbound - outClosed;
+	}
+	
+	public static synchronized long getClientChannels() {
+		return inbound - inClosed;
 	}
 }
