@@ -3,6 +3,7 @@ package ar.edu.itba.pdc.duta.proxy.operation;
 import java.io.IOException;
 
 import ar.edu.itba.pdc.duta.http.model.Message;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
 public class SimpleParser implements BodyParser {
 
@@ -14,13 +15,19 @@ public class SimpleParser implements BodyParser {
 	}
 
 	@Override
-	public void parse() throws IOException {
+	public int parse() throws IOException {
+		
 		Integer length = getLength();
 		if (length == null) {
-			return;
+			return 0;
 		}
 		
-		msg.getBody().consume(length - msg.getBody().getWriteIndex());
+		DataBuffer body = msg.getBody();
+		
+		int pos = body.getWriteIndex();
+		body.consume(length - pos);
+		
+		return body.getWriteIndex() - pos;
 	}
 
 	@Override
@@ -43,5 +50,5 @@ public class SimpleParser implements BodyParser {
 			return null;
 		}
 	}
-
+	
 }

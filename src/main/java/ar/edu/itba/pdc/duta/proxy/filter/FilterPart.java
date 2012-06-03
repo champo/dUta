@@ -12,7 +12,7 @@ public abstract class FilterPart {
 		return null;
 	}
 
-	public Message bytesRecieved(Operation op, Message msg) {
+	public Message bytesRecieved(Operation op, Message msg, long recieved) {
 		return null;
 	}
 

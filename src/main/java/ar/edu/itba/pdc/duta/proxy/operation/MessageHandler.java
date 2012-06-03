@@ -6,9 +6,11 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
@@ -27,6 +29,8 @@ public class MessageHandler {
 	private boolean complete;
 
 	private BodyParser parser;
+	
+	private long size = 0;
 
 	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel) {
 		this.filters = filters;
@@ -57,7 +61,10 @@ public class MessageHandler {
 			}
 		}
 
-		parser = new SimpleParser(msg);
+		if (!createParser()) {
+			return MessageFactory.build500();
+		}
+		
 		DataBuffer buffer = new DataBuffer();
 		msg.setBody(buffer);
 		buffer.release();
@@ -78,6 +85,40 @@ public class MessageHandler {
 		return null;
 	}
 
+	private boolean createParser() {
+		
+		MessageHeader header = msg.getHeader();
+ 		
+		String length = header.getField("Content-Length");
+		try {
+			Integer.valueOf(length);
+			parser = new SimpleParser(msg);
+		} catch (NumberFormatException e) {
+			
+			if (!Grammar.HTTP11.equalsIgnoreCase(header.getHTTPVersion())) {
+				parser = new Http10Parser(msg);
+			} else if (isChunked()) {
+				parser = new ChunkedParser(msg, needsBody);
+			} else if (header instanceof RequestHeader) {
+				
+				String type = header.getField("Content-Type");
+				if (type == null || type.isEmpty()) {
+					parser = new EmptyParser();
+				} else {
+					return false;
+				}
+			}
+			
+		}
+		
+		return parser != null;
+	}
+
+	private boolean isChunked() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 	public Message forceCompletion(Operation op) {
 		complete = true;
 
@@ -91,7 +132,7 @@ public class MessageHandler {
 	public Message append(Operation op) {
 		
 		try {
-			parser.parse();
+			size += parser.parse();
 		} catch (IOException e) {
 			return MessageFactory.build500();
 		}
@@ -103,7 +144,7 @@ public class MessageHandler {
 			for (OperationFilter filter : filters) {
 
 				if (filter.interest.bytesRecieved()) {
-					Message result = filter.part.bytesRecieved(op, msg);
+					Message result = filter.part.bytesRecieved(op, msg, size);
 					if (result != null) {
 						return result;
 					}

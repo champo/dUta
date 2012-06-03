@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public interface BodyParser {
 
-	public void parse() throws IOException;
+	public int parse() throws IOException;
 	
 	public boolean isComplete();
 	
