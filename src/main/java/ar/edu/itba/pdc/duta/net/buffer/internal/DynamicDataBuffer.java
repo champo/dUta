@@ -15,7 +15,7 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 
 	private List<ByteBuffer> buffer;
 
-	private int capacity = 0x1000; // 4 KB ÂÂ puny humans
+	private int capacity = 0x1000; // 4 KB ï¿½ï¿½ puny humans
 
 
 	public DynamicDataBuffer() {
@@ -64,7 +64,9 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 			aux.limit(endPos);
 			readBytes = inputChannel.read(aux);
 
-			if (readBytes > 0) {
+			if (readBytes == -1) {
+				throw new IOException("The input channel just gave an invalid read");
+			} else {
 				writeIndex += readBytes;
 			}
 			return;
@@ -73,7 +75,9 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		aux.limit(capacity);
 		readBytes = inputChannel.read(aux);
 
-		if (readBytes > 0) {
+		if (readBytes == -1) {
+			throw new IOException("The input channel just gave an invalid read");
+		} else {
 			writeIndex += readBytes;
 		}
 
@@ -88,7 +92,9 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 			aux.limit(capacity);
 			readBytes = inputChannel.read(aux);
 
-			if (readBytes > 0) {
+			if (readBytes == -1) {
+				throw new IOException("The input channel just gave an invalid read");
+			} else {
 				writeIndex += readBytes;
 			}
 
@@ -131,7 +137,13 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		}
 
 		aux.limit(capacity);
-		readIndex += writtenBytes = outputChannel.write(aux);
+		writtenBytes = outputChannel.write(aux);
+		
+		if (writtenBytes == -1) {
+			throw new IOException("The output channel just gave an invalid write");
+		} else {
+			readIndex += writtenBytes;
+		}
 
 		if (writtenBytes < capacity - startPos) {
 			return;
@@ -142,7 +154,13 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 			aux = buffer.get(index);
 			aux.position(0);
 			aux.limit(capacity);
-			readIndex += writtenBytes = outputChannel.write(aux);
+			writtenBytes = outputChannel.write(aux);
+			
+			if (writtenBytes == -1) {
+				throw new IOException("The output channel just gave an invalid write");
+			} else {
+				readIndex += writtenBytes;
+			}
 
 			if (writtenBytes < capacity) {
 				return;

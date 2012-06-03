@@ -126,7 +126,7 @@ public class DataBuffer {
 	/**
 	 * Read bytes from the buffer into a byte array.
 	 * 
-	 * This attemps to read count bytes from the buffer into bytes, starting at offset on bytes.
+	 * This attempts to read count bytes from the buffer into bytes, starting at offset on bytes.
 	 * The bytes read start from the current readIndex of the buffer. 
 	 * 
 	 * @param bytes
