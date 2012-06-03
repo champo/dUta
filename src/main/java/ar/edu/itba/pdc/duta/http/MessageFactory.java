@@ -7,7 +7,7 @@ import java.util.Map;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
-import ar.edu.itba.pdc.duta.net.buffer.FixedDataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
 public final class MessageFactory {
 	
@@ -40,7 +40,7 @@ public final class MessageFactory {
 		MessageHeader header = new ResponseHeader(Grammar.HTTP11, code, reason, fields);
 		Message message = new Message(header);
 		
-		message.setBody(new FixedDataBuffer(bytes));
+		message.setBody(new DataBuffer(bytes));
 		//FIXME: Release the data buffer!
 		
 		return message;
