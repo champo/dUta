@@ -8,6 +8,8 @@ import org.apache.log4j.Logger;
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
+import ar.edu.itba.pdc.duta.http.parser.MessageParser;
+import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 public class ClientHandler extends AbstractChannelHandler {
@@ -66,6 +68,13 @@ public class ClientHandler extends AbstractChannelHandler {
 	protected void processHeader(MessageHeader header) {
 		currentOperation = new Operation(this);
 		buffer = currentOperation.setClientHeader((RequestHeader) header);
-		buffer.retain();
+		if (buffer != null) {
+			buffer.retain();
+		}
+	}
+
+	@Override
+	protected MessageParser newParser() {
+		return new RequestParser();
 	}
 }

@@ -11,8 +11,8 @@ import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.http.parser.MessageParser;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
-import ar.edu.itba.pdc.duta.http.parser.RequestParser;
 import ar.edu.itba.pdc.duta.net.ChannelHandler;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -30,7 +30,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	protected Object keyLock;
 
-	private RequestParser parser;
+	private MessageParser parser;
 
 	protected DataBuffer buffer;
 
@@ -146,10 +146,11 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	public void read(SocketChannel channel) throws IOException {
 
 		if (buffer == null) {
-			parser = new RequestParser();
+			parser = newParser();
 			buffer = new DataBuffer();
-			buffer.readFrom(channel);
 		}
+		
+		buffer.readFrom(channel);
 
 		if (parser != null) {
 			parseHeader();
@@ -197,6 +198,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		buffer.release();
 		buffer = null;
 	}
+	
+	protected abstract MessageParser newParser();
 
 	protected abstract void processHeader(MessageHeader header);
 

@@ -7,6 +7,8 @@ import org.apache.log4j.Logger;
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
+import ar.edu.itba.pdc.duta.http.parser.MessageParser;
+import ar.edu.itba.pdc.duta.http.parser.ResponseParser;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
@@ -67,7 +69,14 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 	@Override
 	protected void processHeader(MessageHeader header) {
 		buffer = currentOperation.setServerHeader((ResponseHeader) header);
-		buffer.retain();
+		if (buffer != null) {
+			buffer.retain();
+		}
+	}
+
+	@Override
+	protected MessageParser newParser() {
+		return new ResponseParser();
 	}
 
 }
