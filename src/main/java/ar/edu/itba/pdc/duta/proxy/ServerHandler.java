@@ -63,14 +63,30 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 
 	@Override
 	protected void processBody() {
-		currentOperation.addServerBody();
+		if (currentOperation != null) {
+			currentOperation.addServerBody();
+		}
 	}
 
 	@Override
 	protected void processHeader(MessageHeader header) {
+		
+		if (currentOperation == null) {
+			return;
+		}
+		
 		buffer = currentOperation.setServerHeader((ResponseHeader) header);
 		if (buffer != null) {
 			buffer.retain();
+		}
+	}
+	
+	public void operationComplete() {
+		currentOperation = null;
+		
+		if (buffer != null) {
+			buffer.release();
+			buffer = null;
 		}
 	}
 

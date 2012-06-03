@@ -39,7 +39,11 @@ public class ChannelProxy implements OutputChannel {
 	private void openChannel() {
 		logger.debug("Opening channel...");
 		channel = Server.getConnectionPool().getConnection(address);
-		channel.setCurrentOperation(op);
+		if (channel == null) {
+			throw new RuntimeException("Failed to resolve");
+		} else {
+			channel.setCurrentOperation(op);
+		}
 	}
 
 	public ServerHandler getChannel() {

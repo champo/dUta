@@ -1,5 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy.operation;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -52,6 +53,10 @@ public class MessageHandler {
 			}
 		}
 
+		DataBuffer buffer = new DataBuffer();
+		msg.setBody(buffer);
+		buffer.release();
+		
 		// TODO: Create the buffer as needed
 		if (!needsBody) {
 			Message res = writeHeader();
@@ -80,6 +85,22 @@ public class MessageHandler {
 
 	public Message append(Operation op) {
 
+		DataBuffer body = msg.getBody();
+		
+		Integer length = msg.getLength();
+		if (length != null) {
+			
+			try {
+				body.consume(length - body.getWriteIndex());
+			} catch (IOException e) {
+				//TODO: 500 out
+				return null;
+			}
+			
+		} else {
+			//TODO: Crap!
+		}
+		
 		if (!needsBody) {
 			outputChannel.queueOutput(msg.getBody());
 		} else {

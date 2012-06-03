@@ -46,8 +46,6 @@ public class ConnectionPool {
 	public void registerConnection(ServerHandler handler) {
 
 		synchronized (pool) {
-			handler.setCurrentOperation(null);
-
 			String key = addressToKey(handler.getAddress());
 			Queue<ServerHandler> list = pool.get(key);
 
@@ -87,8 +85,6 @@ public class ConnectionPool {
 	public void remove(ServerHandler handler) {
 
 		synchronized (pool) {
-			handler.setCurrentOperation(null);
-
 			String key = addressToKey(handler.getAddress());
 			Queue<ServerHandler> list = pool.get(key);
 

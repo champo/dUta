@@ -9,7 +9,6 @@ import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
-import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.parser.MessageParser;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
@@ -167,15 +166,15 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			parser.parse(buffer);
 		} catch (ParseException e) {
 			logger.error("Aborting request due to malformed headers", e);
-			close();
+			abort();
 			return;
 		} catch (IOException e) {
 			logger.error("Failed to read headers, aborting", e);
-			close();
+			abort();
 			return;
 		}
 
-		Stats.addClientTraffic(buffer.getWriteIndex() - pos);
+		wroteBytes(buffer.getWriteIndex() - pos);
 
 		MessageHeader header = parser.getHeader();
 
@@ -197,6 +196,12 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	public void abort() {
 		buffer.release();
 		buffer = null;
+		
+		for (DataBuffer buffer : outputQueue) {
+			buffer.release();
+		}
+		
+		outputQueue.clear();
 	}
 	
 	protected abstract MessageParser newParser();

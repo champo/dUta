@@ -41,9 +41,9 @@ public class Message {
 	public boolean isComplete() {
 
 		String encoding = header.getField("Transfer-Encoding");
-		int len = getLength();
+		Integer len = getLength();
 
-		if (len != -1) {
+		if (len != null) {
 			if (body == null) {
 				return len == 0;
 			} else {
@@ -59,16 +59,14 @@ public class Message {
 		return false;
 	}
 
-	private int getLength() {
+	public Integer getLength() {
 		String length = header.getField("Content-Length");
 
-		int len = 0;
 		try {
-			len = Integer.parseInt(length);
+			return Integer.parseInt(length);
 		} catch (NumberFormatException e) {
-			len = -1;
+			return null;
 		}
-		return len;
 	}
 
 }

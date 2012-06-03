@@ -146,6 +146,9 @@ public class Operation {
 	public void close() {
 
 		if (serverProxy != null && serverProxy.getChannel() != null) {
+			
+			serverProxy.getChannel().operationComplete();
+			
 			if (closeServer) {
 				serverProxy.getChannel().close();
 			} else {
