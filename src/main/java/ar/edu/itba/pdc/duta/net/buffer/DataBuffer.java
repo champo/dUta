@@ -26,8 +26,6 @@ public interface DataBuffer {
 	
 	public void setWriteIndex(int index);
 	
-	public void collect();
-	
 	public boolean hasReadableBytes();
 
 	public int remaining();
@@ -45,4 +43,7 @@ public interface DataBuffer {
 	 */
 	public void get(byte[] bytes, int offset, int count) throws IOException;
 	
+	public void retain();
+	
+	public void release();
 }

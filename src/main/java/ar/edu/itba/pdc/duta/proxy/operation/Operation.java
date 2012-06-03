@@ -84,7 +84,9 @@ public class Operation {
 		logger.debug("Got a response message from a filter. Headers are: " + res.getHeader());
 
 		try {
-			clientHandler.queueOutput(new FixedDataBuffer(res.getHeader().toString().getBytes("ascii")));
+			FixedDataBuffer buffer = new FixedDataBuffer(res.getHeader().toString().getBytes("ascii"));
+			clientHandler.queueOutput(buffer);
+			buffer.release();
 		} catch (UnsupportedEncodingException e) {
 			// If this happens, the world is screwed
 			logger.error("Failed to encode header", e);

@@ -66,5 +66,6 @@ public class ClientHandler extends AbstractChannelHandler {
 	protected void processHeader(MessageHeader header) {
 		currentOperation = new Operation(this);
 		buffer = currentOperation.setClientHeader((RequestHeader) header);
+		buffer.retain();
 	}
 }

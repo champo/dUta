@@ -4,16 +4,23 @@ import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
+import org.apache.log4j.Logger;
+
 public abstract class AbstractDataBuffer implements DataBuffer {
+	
+	private static final Logger logger = Logger.getLogger(AbstractDataBuffer.class);
 
 	protected static final int READ_SIZE = (int) Math.pow(2, 20);
 	
 	protected int writeIndex = 0;
 	
 	protected int readIndex = 0;
+	
+	protected int references;
 
 	public AbstractDataBuffer() {
 		super();
+		references = 1;
 	}
 
 	@Override
@@ -69,5 +76,31 @@ public abstract class AbstractDataBuffer implements DataBuffer {
 	public int remaining() {
 		return writeIndex - readIndex;
 	}
+	
+	protected abstract void collect();
 
+	@Override
+	public void release() {
+		references--;
+		
+		if (references == 0) {
+			collect();
+		}
+	}
+	
+	@Override
+	public void retain() {
+		references++;
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		
+		if (references != 0) {
+			logger.fatal(this + ": I was GC'd with a reference count of " + references);
+			collect();
+		}
+		
+		super.finalize();
+	}
 }

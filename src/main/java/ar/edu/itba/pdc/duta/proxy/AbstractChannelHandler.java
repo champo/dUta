@@ -48,6 +48,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		synchronized (outputQueue) {
 			if (outputQueue.peekLast() != output) {
 				outputQueue.addLast(output);
+				output.retain();
 			}
 		}
 
@@ -83,7 +84,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 				// more
 				break;
 			} else {
-				outputQueue.removeFirst();
+				outputQueue.removeFirst().release();
 			}
 		}
 
@@ -184,7 +185,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 			parser = null;
 
-			buffer.collect();
+			buffer.release();
 			buffer = null;
 
 			processHeader(header);
@@ -193,13 +194,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	@Override
 	public void abort() {
-
-		if (parser != null && buffer != null) {
-			buffer.collect();
-			buffer = null;
-
-			parser = null;
-		}
+		buffer.release();
+		buffer = null;
 	}
 
 	protected abstract void processHeader(MessageHeader header);

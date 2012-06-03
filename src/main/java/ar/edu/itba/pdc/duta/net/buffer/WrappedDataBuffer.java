@@ -4,13 +4,19 @@ import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
+import org.apache.log4j.Logger;
+
 public class WrappedDataBuffer implements DataBuffer {
 	
+	private static final Logger logger = Logger.getLogger(WrappedDataBuffer.class);
+
 	private DataBuffer backer;
 	
 	private int offset;
 	
 	private int length;
+
+	private int references = 1;
 
 	/**
 	 * Wrap a DataBuffer in order to show only a slice of the original.
@@ -27,6 +33,8 @@ public class WrappedDataBuffer implements DataBuffer {
 		this.backer = backer;
 		this.offset = offset;
 		this.length = length;
+		
+		backer.retain();
 	}
 
 	@Override
@@ -80,12 +88,6 @@ public class WrappedDataBuffer implements DataBuffer {
 	}
 
 	@Override
-	public void collect() {
-		backer.collect();
-		backer = null;
-	}
-
-	@Override
 	public boolean hasReadableBytes() {
 		return remaining() > 0;
 	}
@@ -98,6 +100,32 @@ public class WrappedDataBuffer implements DataBuffer {
 	@Override
 	public void get(byte[] bytes, int offset, int count) throws IOException {
 		backer.get(bytes, offset, Math.min(count, remaining()));
+	}
+
+	@Override
+	public void retain() {
+		references++;
+	}
+
+	@Override
+	public void release() {
+		references--;
+		
+		if (references == 0) {
+			backer.release();
+			backer = null;
+		}
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		
+		if (references != 0) {
+			logger.fatal(this + ": I was GC'd with a reference count of " + references);
+			backer.release();
+		}
+		
+		super.finalize();
 	}
 
 }

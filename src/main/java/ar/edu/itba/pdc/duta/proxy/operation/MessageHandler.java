@@ -134,7 +134,10 @@ public class MessageHandler {
 
 		logger.debug("Writing header " + msg.getHeader());
 		try {
-			outputChannel.queueOutput(new FixedDataBuffer(msg.getHeader().toString().getBytes("ascii")));
+			FixedDataBuffer buffer = new FixedDataBuffer(msg.getHeader().toString().getBytes("ascii"));
+			outputChannel.queueOutput(buffer);
+			buffer.release();
+			
 		} catch (UnsupportedEncodingException e) {
 			// If this happens, the world is screwed
 			logger.error("Failed to encode header", e);
@@ -155,4 +158,7 @@ public class MessageHandler {
 		return msg.getBody();
 	}
 
+	public void collect() {
+		msg.setBody(null);
+	}
 }

@@ -22,6 +22,15 @@ public class Message {
 	}
 
 	public void setBody(DataBuffer buffer) {
+		
+		if (this.body != null) {
+			this.body.release();
+		}
+
+		if (buffer != null) {
+			buffer.retain();
+		}
+		
 		this.body = buffer;
 	}
 

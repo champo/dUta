@@ -67,6 +67,7 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 	@Override
 	protected void processHeader(MessageHeader header) {
 		buffer = currentOperation.setServerHeader((ResponseHeader) header);
+		buffer.retain();
 	}
 
 }
