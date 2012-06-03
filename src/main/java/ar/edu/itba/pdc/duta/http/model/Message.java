@@ -38,35 +38,4 @@ public class Message {
 		return body.getWriteIndex();
 	}
 
-	public boolean isComplete() {
-
-		String encoding = header.getField("Transfer-Encoding");
-		Integer len = getLength();
-
-		if (len != null) {
-			if (body == null) {
-				return len == 0;
-			} else {
-				return len <= body.getWriteIndex();
-			}
-		} else if (encoding == null || encoding.isEmpty() || "identity".equals(encoding)) {
-			return true;
-		} else {
-			// TODO: Chuncked sucks
-		}
-
-		// Just for the lulz
-		return false;
-	}
-
-	public Integer getLength() {
-		String length = header.getField("Content-Length");
-
-		try {
-			return Integer.parseInt(length);
-		} catch (NumberFormatException e) {
-			return null;
-		}
-	}
-
 }
