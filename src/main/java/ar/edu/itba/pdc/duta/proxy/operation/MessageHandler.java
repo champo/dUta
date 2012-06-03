@@ -115,8 +115,13 @@ public class MessageHandler {
 	}
 
 	private boolean isChunked() {
-		// TODO Auto-generated method stub
-		return false;
+		String te = msg.getHeader().getField("Transfer-Encoding");
+		
+		if (te == null || te.isEmpty()) {
+			return false;
+		}
+		
+		return "chunked".equalsIgnoreCase(te.trim());
 	}
 
 	public Message forceCompletion(Operation op) {
@@ -134,6 +139,7 @@ public class MessageHandler {
 		try {
 			size += parser.parse();
 		} catch (IOException e) {
+			logger.warn("Failed while parsing a message body", e);
 			return MessageFactory.build500();
 		}
 		
