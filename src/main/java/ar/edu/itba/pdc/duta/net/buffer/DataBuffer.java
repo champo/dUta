@@ -1,41 +1,132 @@
 package ar.edu.itba.pdc.duta.net.buffer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-public interface DataBuffer {
-	
-	public int readFrom(ReadableByteChannel channel) throws IOException;
-	
-	public int readFrom(ReadableByteChannel channel, int limit) throws IOException;
-	
-	public int writeTo(WritableByteChannel channel) throws IOException;
-	
-	public int writeTo(WritableByteChannel channel, int limit) throws IOException;
-	
-	public byte get() throws IOException;
-	
-	public boolean hasFreeSpace();
-	
-	public int getReadIndex();
-	
-	public void setReadIndex(int index);
-	
-	public int getWriteIndex();
-	
-	public void setWriteIndex(int index);
-	
-	public void collect();
-	
-	public boolean hasReadableBytes();
+import org.apache.log4j.Logger;
 
-	public int remaining();
+import ar.edu.itba.pdc.duta.net.buffer.internal.DynamicDataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.internal.FileDataBuffer;
+import ar.edu.itba.pdc.duta.net.buffer.internal.InternalDataBuffer;
+
+public class DataBuffer {
+
+	private static final Logger logger = Logger.getLogger(DataBuffer.class);
+
+	private InternalDataBuffer buffer;
+
+	private int references = 1;
+
+	private int maxDynamicDataBufferSize = 0x1400000; // 20 MB...
+	
+	private boolean keepBuffer = true;
+
+
+	public DataBuffer() {
+
+		buffer = new DynamicDataBuffer();
+	}
+
+	public DataBuffer(int capacity) {
+
+		buffer = new DynamicDataBuffer(capacity);
+	}
+
+	public DataBuffer(ByteBuffer buffer) {
+
+		this.buffer = new DynamicDataBuffer(buffer);
+	}
+
+	public DataBuffer(byte[] buffer) {
+
+		this(ByteBuffer.wrap(buffer));
+	}
+
+
+	public void doNotKeepBuffer() {
+
+		keepBuffer = false;
+	}
+
+
+	// Doesn't actually read, just sets the input channel
+	// To read, use get or consume
+	public void readFrom(ReadableByteChannel channel) {
+
+		buffer.setInputChannel(channel);
+	}
+
+	// Writes everything (from ReadIndex) to the given output channel
+	public void writeTo(WritableByteChannel channel) throws IOException {
+
+		buffer.setOutputChannel(channel);
+		buffer.write();
+
+		if (!keepBuffer && !hasReadableBytes()) {
+
+			buffer.setReadIndex(0);
+			buffer.setWriteIndex(0);
+		}
+	}
+
+
+	public int getReadIndex() {
+
+		return buffer.getReadIndex();
+	}
+
+	public void setReadIndex(int index) {
+
+		buffer.setReadIndex(index);
+	}
+
+	public int getWriteIndex() {
+
+		return buffer.getWriteIndex();
+	}
+
+	public void setWriteIndex(int index) {
+
+		buffer.setWriteIndex(index);
+	}
+
+
+	public boolean hasReadableBytes() {
+
+		return buffer.getWriteIndex() > buffer.getReadIndex();
+	}
+
+	public int remainingBytes() {
+
+		return buffer.getWriteIndex() - buffer.getReadIndex();
+	}
+
+
+	private void checkSize(int newAdd) throws IOException {
+
+		if (!keepBuffer) {
+			return;
+		}
+		if (maxDynamicDataBufferSize < 0) {
+			return;
+		}
+		if (buffer.getWriteIndex() + newAdd < maxDynamicDataBufferSize) {
+			return;
+		}
+
+		maxDynamicDataBufferSize = -1;
+
+		InternalDataBuffer aux = new FileDataBuffer((DynamicDataBuffer)buffer);
+		buffer.collect();
+		buffer = aux;
+	}
 
 	/**
 	 * Read bytes from the buffer into a byte array.
 	 * 
-	 * This attemps to read count bytes from the buffer into bytes, starting at offset on bytes.
+	 * This attempts to read count bytes from the buffer into bytes, starting at offset on bytes.
 	 * The bytes read start from the current readIndex of the buffer. 
 	 * 
 	 * @param bytes
@@ -43,6 +134,66 @@ public interface DataBuffer {
 	 * @param count
 	 * @throws IOException
 	 */
-	public void get(byte[] bytes, int offset, int count) throws IOException;
-	
+	public void get(byte[] bytes, int offset, int count) throws IOException {
+
+		checkSize(count);
+
+		int oldWriteIndex = buffer.getWriteIndex();
+		buffer.read(count);
+		buffer.get(oldWriteIndex, bytes, offset, count);
+	}
+
+	public byte get() throws IOException {
+
+		checkSize(1);
+
+		byte[] ret = new byte[1];
+		int oldWriteIndex = buffer.getWriteIndex();
+
+		buffer.read(1);
+		buffer.get(oldWriteIndex, ret, 0, 1);
+
+		return ret[0];
+	}
+
+
+	public void consume(int count) throws IOException {
+
+		checkSize(count);
+
+		buffer.read(count);
+	}
+
+	public void consume() throws IOException {
+
+		checkSize(1);
+
+		buffer.read(1);
+	}
+
+
+	// Reference counting
+
+	public void retain() {
+
+		references++;
+	}
+
+	public void release() {
+
+		if (--references == 0) {
+			buffer.collect();
+		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+
+		if (references != 0) {
+			logger.fatal(this + ": I was GC'd with a reference count of " + references);
+			buffer.collect();
+		}
+
+		super.finalize();
+	}
 }
