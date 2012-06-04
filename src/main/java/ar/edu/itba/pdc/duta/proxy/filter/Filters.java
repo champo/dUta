@@ -17,12 +17,7 @@ public class Filters {
 
 	private Filter adminFilter = new AdminFilter();
 
-
-	private Map<Browser, Filter> browserFilter = new HashMap<Browser, Filter>();
-
-	private Map<OperatingSystem, Filter> OSFilter = new HashMap<OperatingSystem, Filter>();
-
-	private Map<String, Filter> IPFilter = new HashMap<String, Filter>();
+	private Map<Object, List<Filter>> filterMap = new HashMap<Object, List<Filter>>();
 
 
 	public List<Filter> getFilterList(SocketChannel socket, MessageHeader header) {
@@ -31,17 +26,7 @@ public class Filters {
 	}
 
 
-	public int addBrowserFilter(Browser broswer, Filter filter) {
-
-		return 0;
-	}
-
-	public int addOSFilter(OperatingSystem operatingSystem, Filter filter) {
-
-		return 0;
-	}
-
-	public int addIPFilter(String ip, Filter filter) {
+	public int addFilter(List<Object> match, Filter filter) {
 
 		return 0;
 	}
