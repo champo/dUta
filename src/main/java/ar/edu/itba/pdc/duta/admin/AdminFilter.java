@@ -2,6 +2,8 @@ package ar.edu.itba.pdc.duta.admin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ar.edu.itba.pdc.duta.admin.endpoint.Endpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.config.AddFilterEndpoint;
@@ -77,14 +79,36 @@ public class AdminFilter implements Filter {
 			if (endpoint == null) {
 				
 				if (uri.startsWith("/filters/")) {
-					return deleteEndpoint.process(msg);
+					endpoint = deleteEndpoint;
 				} else {
 					return MessageFactory.build404();
 				}
-			} else {
-				//TODO: Check Accept headers and if there's a body, 400 out if so
-				return endpoint.process(msg);
 			}
+
+			if (!hasAuth(header.getField("Authorization"))) {
+				Message res = MessageFactory.build(401, "Authentication Required", "");
+				res.getHeader().setField("WWW-Authenticate", "Basic realm=\"dUta Admin\"");
+				
+				return res;
+			}
+		
+			return endpoint.process(msg);
+		}
+
+		private boolean hasAuth(String auth) {
+			
+			if (auth == null) {
+				return false;
+			}
+			
+			Matcher matcher = Pattern.compile("Basic[ \\t]+(.+)").matcher(auth);
+			
+			if (!matcher.matches()) {
+				return false;
+			}
+			
+			String digest = matcher.group(1);
+			return "aGVtYW46bWFzdGVyb2Z1bml2ZXJzZQ==".equals(digest);
 		}
 		
 	}
