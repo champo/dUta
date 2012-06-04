@@ -203,7 +203,7 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		if (startIndex == endIndex) {
 
 			aux.limit(endPos);
-			aux.get(buffer, offset, count);
+			aux.get(buffer, offset, end - pos);
 			return;
 		}
 

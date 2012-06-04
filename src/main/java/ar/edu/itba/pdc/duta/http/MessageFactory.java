@@ -46,7 +46,7 @@ public final class MessageFactory {
 		return message;
 	}
 
-	private static Message build500() {
+	public static Message build500() {
 		return build(500, "Internal server error", "");
 	}
 

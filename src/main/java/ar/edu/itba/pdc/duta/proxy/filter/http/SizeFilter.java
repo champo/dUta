@@ -71,9 +71,9 @@ public class SizeFilter implements Filter {
 		}
 
 		@Override
-		public Message bytesRecieved(Operation op, Message msg) {
+		public Message bytesRecieved(Operation op, Message msg, long recieved) {
 
-			if (msg.getCurrentBodySize() >= maxSize) {
+			if (recieved >= maxSize) {
 				return block();
 			}
 

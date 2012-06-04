@@ -6,8 +6,11 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.http.Grammar;
+import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
@@ -25,6 +28,10 @@ public class MessageHandler {
 
 	private boolean complete;
 
+	private BodyParser parser;
+	
+	private long size = 0;
+
 	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel) {
 		this.filters = filters;
 		this.msg = new Message(header);
@@ -38,6 +45,7 @@ public class MessageHandler {
 				needsBody = true;
 			}
 		}
+		
 		logger.debug("Needs body: " + needsBody);
 	}
 
@@ -53,6 +61,10 @@ public class MessageHandler {
 			}
 		}
 
+		if (!createParser()) {
+			return MessageFactory.build500();
+		}
+		
 		DataBuffer buffer = new DataBuffer();
 		msg.setBody(buffer);
 		buffer.release();
@@ -73,6 +85,45 @@ public class MessageHandler {
 		return null;
 	}
 
+	private boolean createParser() {
+		
+		MessageHeader header = msg.getHeader();
+ 		
+		String length = header.getField("Content-Length");
+		try {
+			Integer.valueOf(length);
+			parser = new SimpleParser(msg);
+		} catch (NumberFormatException e) {
+			
+			if (!Grammar.HTTP11.equalsIgnoreCase(header.getHTTPVersion())) {
+				parser = new Http10Parser(msg);
+			} else if (isChunked()) {
+				parser = new ChunkedParser(msg, needsBody);
+			} else if (header instanceof RequestHeader) {
+				
+				String type = header.getField("Content-Type");
+				if (type == null || type.isEmpty()) {
+					parser = new EmptyParser();
+				} else {
+					return false;
+				}
+			}
+			
+		}
+		
+		return parser != null;
+	}
+
+	private boolean isChunked() {
+		String te = msg.getHeader().getField("Transfer-Encoding");
+		
+		if (te == null || te.isEmpty()) {
+			return false;
+		}
+		
+		return "chunked".equalsIgnoreCase(te.trim());
+	}
+
 	public Message forceCompletion(Operation op) {
 		complete = true;
 
@@ -80,25 +131,16 @@ public class MessageHandler {
 	}
 
 	private void checkCompletion() {
-		complete = msg.isComplete();
+		complete = parser.isComplete();
 	}
 
 	public Message append(Operation op) {
-
-		DataBuffer body = msg.getBody();
 		
-		Integer length = msg.getLength();
-		if (length != null) {
-			
-			try {
-				body.consume(length - body.getWriteIndex());
-			} catch (IOException e) {
-				//TODO: 500 out
-				return null;
-			}
-			
-		} else {
-			//TODO: Crap!
+		try {
+			size += parser.parse();
+		} catch (IOException e) {
+			logger.warn("Failed while parsing a message body", e);
+			return MessageFactory.build500();
 		}
 		
 		if (!needsBody) {
@@ -108,7 +150,7 @@ public class MessageHandler {
 			for (OperationFilter filter : filters) {
 
 				if (filter.interest.bytesRecieved()) {
-					Message result = filter.part.bytesRecieved(op, msg);
+					Message result = filter.part.bytesRecieved(op, msg, size);
 					if (result != null) {
 						return result;
 					}
