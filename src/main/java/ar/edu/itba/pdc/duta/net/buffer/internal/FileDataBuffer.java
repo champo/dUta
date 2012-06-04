@@ -50,7 +50,18 @@ public class FileDataBuffer extends AbstractDataBuffer {
 	@Override
 	public void read(int count) throws IOException {
 
-		writeIndex += fileChannel.transferFrom(inputChannel, writeIndex, count);
+		int bytes;
+
+		ByteBuffer buffer = ByteBuffer.allocate(count);
+		buffer.position(0);
+		buffer.limit(count);
+
+		bytes = inputChannel.read(buffer);
+
+		buffer.position(0);
+		buffer.limit(bytes);
+
+		writeIndex += fileChannel.write(buffer, writeIndex);
 	}
 
 	@Override

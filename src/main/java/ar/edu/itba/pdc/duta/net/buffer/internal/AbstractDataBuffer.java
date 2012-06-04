@@ -1,7 +1,8 @@
 package ar.edu.itba.pdc.duta.net.buffer.internal;
 
-import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+
+import ar.edu.itba.pdc.duta.net.BufferedReadableByteChannel;
 
 public abstract class AbstractDataBuffer implements InternalDataBuffer {
 
@@ -9,13 +10,13 @@ public abstract class AbstractDataBuffer implements InternalDataBuffer {
 
 	protected int writeIndex = 0;
 
-	protected ReadableByteChannel inputChannel;
+	protected BufferedReadableByteChannel inputChannel;
 	
 	protected WritableByteChannel outputChannel;
 
 
 	@Override
-	public void setInputChannel(ReadableByteChannel channel) {
+	public void setInputChannel(BufferedReadableByteChannel channel) {
 
 		inputChannel = channel;
 	}
@@ -27,7 +28,7 @@ public abstract class AbstractDataBuffer implements InternalDataBuffer {
 	}
 
 	@Override
-	public ReadableByteChannel getInputChannel() {
+	public BufferedReadableByteChannel getInputChannel() {
 
 		return inputChannel;
 	}

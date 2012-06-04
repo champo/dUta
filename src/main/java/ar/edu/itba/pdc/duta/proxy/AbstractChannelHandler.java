@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.parser.MessageParser;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
+import ar.edu.itba.pdc.duta.net.BufferedReadableByteChannel;
 import ar.edu.itba.pdc.duta.net.ChannelHandler;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -32,6 +33,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	private MessageParser parser;
 
 	protected DataBuffer buffer;
+
+	private BufferedReadableByteChannel channel;
 
 	public AbstractChannelHandler() {
 
@@ -113,7 +116,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	}
 
 	@Override
-	public void setKey(ReactorKey key) {
+	public void setKey(ReactorKey key, BufferedReadableByteChannel channel) {
 
 		synchronized (keyLock) {
 			this.key = key;
@@ -121,6 +124,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 				key.setInterest(true, !outputQueue.isEmpty());
 			}
 		}
+
+		this.channel = channel;
 	}
 
 	public void close() {
@@ -148,8 +153,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			parser = newParser();
 			buffer = new DataBuffer();
 		}
-		
-		buffer.readFrom(channel);
+
+		buffer.readFrom(this.channel);
 
 		if (parser != null) {
 			parseHeader(channel);

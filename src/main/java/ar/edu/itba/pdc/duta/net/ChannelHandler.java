@@ -11,7 +11,7 @@ public interface ChannelHandler extends OutputChannel {
 
 	public void write(SocketChannel channel) throws IOException;
 	
-	public void setKey(ReactorKey key);
+	public void setKey(ReactorKey key, BufferedReadableByteChannel channel);
 
 	public ReactorKey getKey();
 	

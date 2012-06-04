@@ -2,11 +2,11 @@ package ar.edu.itba.pdc.duta.net.buffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.net.BufferedReadableByteChannel;
 import ar.edu.itba.pdc.duta.net.buffer.internal.DynamicDataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.internal.FileDataBuffer;
 import ar.edu.itba.pdc.duta.net.buffer.internal.InternalDataBuffer;
@@ -53,7 +53,7 @@ public class DataBuffer {
 
 	// Doesn't actually read, just sets the input channel
 	// To read, use get or consume
-	public void readFrom(ReadableByteChannel channel) {
+	public void readFrom(BufferedReadableByteChannel channel) {
 
 		buffer.setInputChannel(channel);
 	}

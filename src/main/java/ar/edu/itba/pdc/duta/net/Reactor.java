@@ -41,7 +41,7 @@ public class Reactor implements Runnable {
 			}
 			
 			SelectionKey key = socket.register(selector, ops, handler);
-			handler.setKey(new ReactorKey(key));
+			handler.setKey(new ReactorKey(key), new BufferedReadableByteChannel(socket));
 		}
 	}
 	
