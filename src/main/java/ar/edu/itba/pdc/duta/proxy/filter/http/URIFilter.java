@@ -1,18 +1,12 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
-import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
-import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.Interest;
