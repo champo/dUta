@@ -3,10 +3,12 @@ package ar.edu.itba.pdc.duta.proxy.filter.http;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
-import ar.edu.itba.pdc.duta.http.model.MediaType;
+import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -41,10 +43,12 @@ public class L33tFilter implements Filter {
 		public Interest checkInterest(MessageHeader header) {
 
 			boolean isText = false;
-			MediaType contentType = new MediaType(header.getField("Content-Type"));
-			if (contentType.getType().equalsIgnoreCase("text/plain")) {
 
-				String encoding = contentType.getParameter("charset");
+			MediaType contentType = MediaType.valueOf(header.getField("Content-Type")); 
+
+			if (contentType.isCompatible(MediaType.TEXT_PLAIN_TYPE)) {
+
+				String encoding = contentType.getParameters().get("charset");
 				if (encoding == null) {
 					encoding = "ISO-8859-1";
 				}
@@ -53,7 +57,6 @@ public class L33tFilter implements Filter {
 					charset = Charset.forName(encoding);
 					isText = true;
 				} else {
-					isText = false;
 					logger.warn("Skipping l33t filtering due to unsupported encoding " + encoding);
 				}
 			}
@@ -64,16 +67,16 @@ public class L33tFilter implements Filter {
 		@Override
 		public Message filter(Operation op, Message msg) {
 
-			DataBuffer buffer = msg.getBody();
 			byte[] bytes = new byte[msg.getCurrentBodySize()];
 
 			try {
-				buffer.get(bytes, 0, msg.getCurrentBodySize());
-			} catch (IOException e) {
-				logger.error("Failed to read message", e);
 
-				// TODO: Return 500
-				return null;
+				msg.getBody().get(bytes, 0, msg.getCurrentBodySize());
+
+			} catch (IOException e) {
+
+				logger.error("Failed to read message", e);
+				return MessageFactory.build500();
 			}
 
 			String body = new String(bytes, charset);

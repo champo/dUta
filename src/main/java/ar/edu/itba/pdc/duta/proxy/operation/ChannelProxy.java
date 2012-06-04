@@ -49,4 +49,8 @@ public class ChannelProxy implements OutputChannel {
 	public ServerHandler getChannel() {
 		return channel;
 	}
+
+	public InetSocketAddress getAddress() {
+		return address;
+	}
 }

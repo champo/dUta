@@ -231,4 +231,9 @@ public class Operation {
 		}
 	}
 
+	public ChannelProxy getServerProxy() {
+
+		return serverProxy;
+	}
+
 }
