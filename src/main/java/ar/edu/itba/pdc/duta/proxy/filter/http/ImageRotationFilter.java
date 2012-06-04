@@ -1,6 +1,5 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
-import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -11,10 +10,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageInputStream;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
