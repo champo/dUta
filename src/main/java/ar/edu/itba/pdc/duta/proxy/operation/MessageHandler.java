@@ -11,6 +11,7 @@ import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
+import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
@@ -31,6 +32,15 @@ public class MessageHandler {
 	private BodyParser parser;
 	
 	private long size = 0;
+
+	private boolean hasBody = true;
+	
+	private boolean wroteBody = false;
+	
+	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel, boolean hasBody) {
+		this(header, filters, outputChannel);
+		this.hasBody = hasBody;
+	}
 
 	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel) {
 		this.filters = filters;
@@ -87,6 +97,11 @@ public class MessageHandler {
 
 	private boolean createParser() {
 		
+		if (!hasBody) {
+			parser = new EmptyParser();
+			return true;
+		}
+		
 		MessageHeader header = msg.getHeader();
  		
 		String length = header.getField("Content-Length");
@@ -106,6 +121,19 @@ public class MessageHandler {
 					parser = new EmptyParser();
 				} else {
 					return false;
+				}
+				
+			} else if (header instanceof ResponseHeader) {
+				
+				ResponseHeader response = (ResponseHeader) header;
+				switch (response.getStatusCode()) {
+				case 100:
+				case 101:
+				case 204:
+				case 205:
+				case 304:
+					parser = new EmptyParser();
+					break;
 				}
 			}
 			
@@ -204,11 +232,16 @@ public class MessageHandler {
 			// If this happens, the world is screwed
 			logger.error("Failed to encode header", e);
 
-			// TODO: Return a 500 error
-			return null;
+			return MessageFactory.build500();
 		}
+		
+		wroteBody = true;
 
 		return null;
+	}
+	
+	public boolean wroteBody() {
+		return wroteBody;
 	}
 
 	public boolean isMessageComplete() {
@@ -222,5 +255,9 @@ public class MessageHandler {
 
 	public void collect() {
 		msg.setBody(null);
+	}
+	
+	public Message getMessage() {
+		return msg;
 	}
 }

@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Connection;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
@@ -18,8 +19,6 @@ import ar.edu.itba.pdc.duta.proxy.ServerHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
-import ar.edu.itba.pdc.duta.proxy.filter.http.IPFilter;
-import ar.edu.itba.pdc.duta.proxy.filter.http.URIFilter;
 
 public class Operation {
 
@@ -40,6 +39,8 @@ public class Operation {
 	private boolean closeClient = false;
 
 	private ChannelProxy serverProxy;
+
+	private boolean isHead;
 
 	public Operation(ClientHandler requestChannelHandler) {
 		clientHandler = requestChannelHandler;
@@ -62,11 +63,13 @@ public class Operation {
 
 		InetSocketAddress address = extractAddress(header);
 		if (address == null) {
-			// TODO: Return a 500 error
-			throw new RuntimeException("Fuckity fuck");
+			writeMessage(MessageFactory.build500());
+			return null;
 		}
 
 		logger.debug("Destination address: " + address);
+		
+		isHead = "HEAD".equalsIgnoreCase(header.getMethod());
 
 		serverProxy = new ChannelProxy(address, this);
 		clientMessageHandler = new MessageHandler(header, requestFilters, serverProxy);
@@ -81,6 +84,12 @@ public class Operation {
 	}
 
 	private void writeMessage(Message res) {
+		
+		if (serverMessageHandler != null && serverMessageHandler.wroteBody()) {
+			logger.warn("Wont write filter message since headers were written already");
+			abort();
+			return;
+		}
 
 		logger.debug("Got a response message from a filter. Headers are: " + res.getHeader());
 
@@ -92,7 +101,7 @@ public class Operation {
 			// If this happens, the world is screwed
 			logger.error("Failed to encode header", e);
 
-			// TODO: Return a 500 error
+			abort();
 			return;
 		}
 
@@ -143,8 +152,14 @@ public class Operation {
 			clientHandler.close();
 		}
 
-		// TODO: Make sure all buffers are cleaned up by asking the chains to do
-		// so
+		
+		if (clientMessageHandler != null) {
+			clientMessageHandler.collect();
+		}
+		
+		if (serverMessageHandler != null) {
+			serverMessageHandler.collect();
+		}
 	}
 
 	public void close() {
@@ -205,7 +220,7 @@ public class Operation {
 			}
 		}
 
-		serverMessageHandler = new MessageHandler(header, responseFilters, clientHandler);
+		serverMessageHandler = new MessageHandler(header, responseFilters, clientHandler, !isHead);
 		Message res = serverMessageHandler.processHeader(this);
 		if (res != null) {
 			writeMessage(res);
