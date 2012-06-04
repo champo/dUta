@@ -45,7 +45,7 @@ public class L33tFilter implements Filter {
 
 			MediaType contentType = MediaType.valueOf(header.getField("Content-Type")); 
 
-			if (contentType.isCompatible(MediaType.TEXT_PLAIN_TYPE)) {
+			if (MediaType.TEXT_PLAIN_TYPE.isCompatible(contentType)) {
 
 				String encoding = contentType.getParameters().get("charset");
 				if (encoding == null) {

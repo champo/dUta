@@ -57,7 +57,7 @@ public class ImageRotationFilter implements Filter {
 
 			contentType = MediaType.valueOf(header.getField("Content-Type")); 
 
-			if (contentType.isCompatible(MediaType.valueOf("image/*"))) {
+			if (MediaType.valueOf("image/*").isCompatible(contentType)) {
 
 				isImage = true;
 			}
