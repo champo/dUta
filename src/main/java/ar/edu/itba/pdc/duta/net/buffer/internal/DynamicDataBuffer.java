@@ -18,6 +18,9 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 	private int capacity = 0x1000; // 4 KB �� puny humans
 
 
+	private int magicIndex = 0;
+
+
 	public DynamicDataBuffer() {
 
 		buffer = new ArrayList<ByteBuffer>();
@@ -35,6 +38,7 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 
 		capacity = buffer.capacity();
 		writeIndex = capacity;
+		magicIndex = capacity;
 		this.buffer = new ArrayList<ByteBuffer>();
 		this.buffer.add(buffer);
 	}
@@ -44,6 +48,21 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 
 		if (count == 0) {
 			return;
+		}
+
+		if (writeIndex < magicIndex) {
+
+			int puto = Math.min(magicIndex - writeIndex, count);
+
+			writeIndex += puto;
+			count -= puto;
+
+			if (count == 0) return;
+		}
+
+		int backCount = count;
+		if (count < 0x4000) {
+			count = 0x4000;
 		}
 
 		int startIndex = writeIndex / capacity;
@@ -68,8 +87,9 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 			if (readBytes == -1) {
 				throw new IOException("The input channel just gave an invalid read");
 			} else {
-				writeIndex += readBytes;
+				magicIndex += readBytes;
 			}
+			writeIndex = Math.min(writeIndex + backCount, magicIndex);
 			return;
 		}
 
@@ -77,12 +97,14 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		readBytes = inputChannel.read(aux);
 
 		if (readBytes == -1) {
+			writeIndex = Math.min(writeIndex + backCount, magicIndex);
 			throw new IOException("The input channel just gave an invalid read");
 		} else {
-			writeIndex += readBytes;
+			magicIndex += readBytes;
 		}
 
 		if (readBytes < capacity - startPos) {
+			writeIndex = Math.min(writeIndex + backCount, magicIndex);
 			return;
 		}
 
@@ -98,12 +120,14 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 			readBytes = inputChannel.read(aux);
 
 			if (readBytes == -1) {
+				writeIndex = Math.min(writeIndex + backCount, magicIndex);
 				throw new IOException("The input channel just gave an invalid read");
 			} else {
-				writeIndex += readBytes;
+				magicIndex += readBytes;
 			}
 
 			if (readBytes < capacity) {
+				writeIndex = Math.min(writeIndex + backCount, magicIndex);
 				return;
 			}
 		}
@@ -118,8 +142,9 @@ public class DynamicDataBuffer extends AbstractDataBuffer {
 		readBytes = inputChannel.read(aux);
 
 		if (readBytes > 0) {
-			writeIndex += readBytes;
+			magicIndex += readBytes;
 		}
+		writeIndex = Math.min(writeIndex + backCount, magicIndex);
 	}
 
 	@Override
