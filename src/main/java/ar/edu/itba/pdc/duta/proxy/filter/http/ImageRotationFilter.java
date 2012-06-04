@@ -12,12 +12,12 @@ import java.util.NoSuchElementException;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageWriter;
-import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
+import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -68,11 +68,9 @@ public class ImageRotationFilter implements Filter {
 		@Override
 		public Message filter(Operation op, Message msg) {
 
-			byte[] bytes = new byte[msg.getCurrentBodySize()];
-
 			try {
 
-				msg.getBody().get(bytes, 0, msg.getCurrentBodySize());
+				byte[] bytes = msg.getBody().read();
 
 		        Iterator<ImageReader> readers = ImageIO.getImageReadersByMIMEType(contentType.toString());
 		        ImageReader reader = readers.next();

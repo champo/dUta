@@ -2,6 +2,8 @@ package ar.edu.itba.pdc.duta.proxy.operation;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -110,8 +112,27 @@ public class Operation {
 	}
 
 	private InetSocketAddress extractAddress(RequestHeader header) {
+		
+		try {
+			URL url = new URL(header.getRequestURI());
+			if (header.getField("Host") == null) {
+				header.setField("Host", url.getHost());
+			} 
+
+			String file = url.getFile();
+			if (file.isEmpty()) {
+				header.setRequestURI("/");
+			} else {
+				header.setRequestURI(file);
+			}
+		} catch (MalformedURLException e) {
+			// This is cool, I think
+		}
 
 		String host = header.getField("Host");
+		if (host == null) {
+			return null;
+		}
 
 		if (host.contains(":")) {
 			String[] split = host.split(":");

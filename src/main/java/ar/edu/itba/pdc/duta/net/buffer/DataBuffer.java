@@ -123,24 +123,10 @@ public class DataBuffer {
 		buffer = aux;
 	}
 
-	/**
-	 * Read bytes from the buffer into a byte array.
-	 * 
-	 * This attempts to read count bytes from the buffer into bytes, starting at offset on bytes.
-	 * The bytes read start from the current readIndex of the buffer. 
-	 * 
-	 * @param bytes
-	 * @param offset
-	 * @param count
-	 * @throws IOException
-	 */
-	public void get(byte[] bytes, int offset, int count) throws IOException {
-
-		checkSize(count);
-
-		int oldWriteIndex = buffer.getWriteIndex();
-		buffer.read(count);
-		buffer.get(oldWriteIndex, bytes, offset, count);
+	public byte[] read() throws IOException {
+		byte[] bytes = new byte[remainingBytes()];
+		buffer.get(buffer.getReadIndex(), bytes, 0, bytes.length);
+		return bytes;
 	}
 
 	public byte get() throws IOException {

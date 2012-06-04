@@ -3,12 +3,11 @@ package ar.edu.itba.pdc.duta.proxy.filter.http;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-import javax.ws.rs.core.MediaType;
-
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
+import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -67,11 +66,11 @@ public class L33tFilter implements Filter {
 		@Override
 		public Message filter(Operation op, Message msg) {
 
-			byte[] bytes = new byte[msg.getCurrentBodySize()];
+			byte[] bytes;
 
 			try {
 
-				msg.getBody().get(bytes, 0, msg.getCurrentBodySize());
+				bytes = msg.getBody().read();
 
 			} catch (IOException e) {
 

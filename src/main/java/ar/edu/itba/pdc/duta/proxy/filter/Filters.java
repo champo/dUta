@@ -103,19 +103,18 @@ public class Filters {
 	}
 
 
-	public void removeFilter(int id) {
+	public boolean removeFilter(int id) {
 
 		Set<Object> matches = filterMatches.put(id, null);
 
 		if (matches == null) {
-			return;
+			return false;
 		}
 
 		for (Object match : matches) {
-
 			filterMultimap.get(match).remove(id);
 		}
 
-		filterIds.remove(id);
+		return filterIds.remove(id) != null;
 	}
 }

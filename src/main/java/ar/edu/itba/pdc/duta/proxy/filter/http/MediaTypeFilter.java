@@ -1,9 +1,8 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
-import javax.ws.rs.core.MediaType;
-
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
+import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;

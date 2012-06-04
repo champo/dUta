@@ -1,8 +1,5 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.http.MessageFactory;
@@ -71,23 +68,6 @@ public class HttpFilter implements Filter {
 				return unsuportedMethod();
 			}
 			
-			
-			try {
-				URL url = new URL(request.getRequestURI());
-				if (header.getField("Host") == null) {
-					header.setField("Host", url.getHost());
-				} 
-
-				String file = url.getFile();
-				if (file.isEmpty()) {
-					request.setRequestURI("/");
-				} else {
-					request.setRequestURI(file);
-				}
-			} catch (MalformedURLException e) {
-				// This is cool, I think
-			}
-
 			return null;
 		}
 

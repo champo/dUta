@@ -58,4 +58,9 @@ public class Grammar {
 		
 		return Pattern.matches("HTTP/[0-9]+\\.[0-9]+", s);
 	}
+	
+	public static boolean isLWS(char c) {
+		return c == '\t' || c == ' ';
+	}
+	
 }
