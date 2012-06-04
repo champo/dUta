@@ -36,9 +36,7 @@ public class Filters {
 
 	private ConcurrentMap<Integer, Set<Object>> filterMatches = new ConcurrentHashMap<Integer, Set<Object>>();
 
-
 	private AtomicInteger id = new AtomicInteger();
-
 
 	public List<Filter> getFilterList(SocketChannel channel, MessageHeader header) {
 
@@ -97,7 +95,8 @@ public class Filters {
 
 		for (Object match : matches) {
 
-			filterMultimap.putIfAbsent(match, new LinkedBlockingQueue<Integer>()).add(id);
+			filterMultimap.putIfAbsent(match, new LinkedBlockingQueue<Integer>());
+			filterMultimap.get(match).add(id);
 		}
 
 		return id;
