@@ -36,6 +36,7 @@ public final class MessageFactory {
 		
 		fields.put("Via", "dUta");
 		fields.put("Content-Length", String.valueOf(bytes.length));
+		fields.put("Content-Type", "text/plain; encoding=UTF-8");
 		
 		MessageHeader header = new ResponseHeader(Grammar.HTTP11, code, reason, fields);
 		Message message = new Message(header);

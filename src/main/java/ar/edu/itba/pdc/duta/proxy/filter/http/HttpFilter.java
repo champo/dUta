@@ -5,6 +5,7 @@ import java.net.URL;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
@@ -36,6 +37,7 @@ public class HttpFilter implements Filter {
 
 		@Override
 		public Message processHeader(Operation op, MessageHeader header) {
+			
 			header.setField("Via", "dUta");
 			header.removeField("Connection");
 
@@ -59,7 +61,17 @@ public class HttpFilter implements Filter {
 			header.removeField("Proxy-Authorization");
 
 			RequestHeader request = (RequestHeader) header;
-
+			String method = request.getMethod();
+			
+			if (method.equalsIgnoreCase("OPTIONS")) {
+				return unsuportedMethod();
+			} else if (method.equalsIgnoreCase("TRACE")) {
+				return unsuportedMethod();
+			} else if (method.equalsIgnoreCase("CONNECT")) {
+				return unsuportedMethod();
+			}
+			
+			
 			try {
 				URL url = new URL(request.getRequestURI());
 				if (header.getField("Host") == null) {
@@ -78,11 +90,14 @@ public class HttpFilter implements Filter {
 
 			return null;
 		}
+
+		private Message unsuportedMethod() {
+			return MessageFactory.build(501, "Not Implemented", "That aint cool bro.");
+		}
 	}
 
 	@Override
 	public int getPriority() {
-
 		return Integer.MAX_VALUE;
 	}
 }
