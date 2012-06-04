@@ -44,7 +44,7 @@ public class MediaTypeFilter implements Filter {
 		@Override
 		public Message processHeader(Operation op, MessageHeader header) {
 
-			if (MediaType.valueOf(header.getField("Content-Type")).isCompatible(mediaType)) {
+			if (mediaType.isCompatible(MediaType.valueOf(header.getField("Content-Type")))) {
 
 				return MessageFactory.build404();
 			}

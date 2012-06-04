@@ -52,14 +52,17 @@ public class Filters {
 
 		Set<Integer> matchingFilters = new HashSet<Integer>();
 
-		BlockingQueue<Integer> browserList = filterMultimap.get(Browser.parseUserAgentString(header.getField("User-Agent")));
-		if (browserList != null) {
-			matchingFilters.addAll(browserList);
-		}
-		
-		BlockingQueue<Integer> osList = filterMultimap.get(OperatingSystem.parseUserAgentString(header.getField("User-Agent")));
-		if (osList != null) {
-			matchingFilters.addAll(osList);
+		String ua = header.getField("User-Agent");
+		if (ua != null) { 
+			BlockingQueue<Integer> browserList = filterMultimap.get(Browser.parseUserAgentString(ua));
+			if (browserList != null) {
+				matchingFilters.addAll(browserList);
+			}
+			
+			BlockingQueue<Integer> osList = filterMultimap.get(OperatingSystem.parseUserAgentString(ua));
+			if (osList != null) {
+				matchingFilters.addAll(osList);
+			}
 		}
 		
 		BlockingQueue<Integer> ipList = filterMultimap.get(channel.socket().getLocalAddress().getHostAddress());

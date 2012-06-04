@@ -1,5 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
+import java.net.InetAddress;
 import java.util.regex.Pattern;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
@@ -47,7 +48,8 @@ public class IPFilter implements Filter {
 		@Override
 		public Message processHeader(Operation op, MessageHeader header) {
 
-			if (pattern.matcher(op.getServerProxy().getAddress().getAddress().getHostAddress()).matches()) {
+			InetAddress address = op.getServerProxy().getAddress().getAddress();
+			if (address != null && pattern.matcher(address.getHostAddress()).matches()) {
 
 				return MessageFactory.build404();
 			}
