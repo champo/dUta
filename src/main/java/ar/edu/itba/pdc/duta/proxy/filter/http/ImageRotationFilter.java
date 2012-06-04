@@ -96,13 +96,13 @@ public class ImageRotationFilter implements Filter {
 
 			} catch (IOException e) {
 
-				logger.error("Failed to read/write image", e);
-				return MessageFactory.build500();
+				logger.warn("Failed to read/write image", e);
+				msg.getBody().setReadIndex(0);
 
 			}  catch (NoSuchElementException e) {
 
-				logger.error("Invalid image type", e);
-				return MessageFactory.build500();
+				logger.warn("Invalid image type", e);
+				msg.getBody().setReadIndex(0);
 			}
 
 			return null;
