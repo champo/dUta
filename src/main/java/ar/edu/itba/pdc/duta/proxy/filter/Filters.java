@@ -18,12 +18,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import nl.bitwalker.useragentutils.Browser;
 import nl.bitwalker.useragentutils.OperatingSystem;
 import ar.edu.itba.pdc.duta.admin.AdminFilter;
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
 
 public class Filters {
-
-	private int adminPort = 1337;
 
 	private Filter adminFilter = new AdminFilter();
 
@@ -46,7 +46,7 @@ public class Filters {
 
 		ret.add(httpFilter);
 
-		if (channel.socket().getLocalPort() == adminPort) {
+		if (channel.socket().getLocalPort() == Server.ADMIN_PORT) {
 
 			ret.add(adminFilter);
 			return ret;
@@ -70,7 +70,9 @@ public class Filters {
 		}
 
 		for (Integer id : matchingFilters) {
-			ret.add(filterIds.get(id));
+			Filter filter = filterIds.get(id);
+			ret.add(filter);
+			Stats.applyFilter(filter.getClass());
 		}
 
 		Collections.sort(ret, new Comparator<Filter>() {

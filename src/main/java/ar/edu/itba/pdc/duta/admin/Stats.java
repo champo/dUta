@@ -86,4 +86,13 @@ public class Stats {
 	public static synchronized long getClientChannels() {
 		return inbound - inClosed;
 	}
+
+	public static synchronized long filterMatches(Class<? extends Filter> clz) {
+		Long res = filterMatches.get(clz);
+		if (res == null) {
+			return 0;
+		}
+		
+		return res;
+	}
 }

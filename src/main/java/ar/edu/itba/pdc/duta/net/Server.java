@@ -3,6 +3,7 @@ package ar.edu.itba.pdc.duta.net;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -21,6 +22,8 @@ import ar.edu.itba.pdc.duta.proxy.filter.Filters;
 
 @ThreadSafe
 public class Server {
+	
+	public static final int ADMIN_PORT = 1337;
 
 	public static final Logger logger = Logger.getLogger(Server.class);
 
@@ -53,12 +56,8 @@ public class Server {
 			int port = 9999;
 
 			Selector selector = Selector.open();
-			ServerSocketChannel serverChannel = selector.provider().openServerSocketChannel();
-			
-			serverChannel.configureBlocking(false);
-			serverChannel.socket().bind(new InetSocketAddress(port));
-			
-			serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+			listen(port, selector);
+			listen(ADMIN_PORT, selector);
 			
 			logger.info("Starting server on port: " + port);
 			
@@ -91,6 +90,22 @@ public class Server {
 		
 		reactorPool.close();
 		reactorPool = null;
+	}
+
+	/**
+	 * @param port
+	 * @param selector
+	 * @throws IOException
+	 * @throws ClosedChannelException
+	 */
+	private void listen(int port, Selector selector) throws IOException,
+			ClosedChannelException {
+		ServerSocketChannel serverChannel = selector.provider().openServerSocketChannel();
+		
+		serverChannel.configureBlocking(false);
+		serverChannel.socket().bind(new InetSocketAddress(port));
+		
+		serverChannel.register(selector, SelectionKey.OP_ACCEPT);
 	}
 	
 	private void runReactors() throws IOException {

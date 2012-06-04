@@ -8,6 +8,13 @@ import ar.edu.itba.pdc.duta.admin.endpoint.stats.BytesEndpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.stats.ChannelsEndpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.stats.ClientBytesEndpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.stats.ClientChannelsEndpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.stats.DenyAllEndpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.stats.DenyIpEndpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.stats.DenySizeEndpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.stats.DenyTypeEndpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.stats.DenyUrlEndpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.stats.L33tEndpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.stats.RotateEndpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.stats.ServerBytesEndpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.stats.ServerChannelsEndpoint;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
@@ -29,6 +36,13 @@ public class AdminFilter implements Filter {
 		endpoints.put("/stats/channels", new ChannelsEndpoint());
 		endpoints.put("/stats/channels/clients", new ClientChannelsEndpoint());
 		endpoints.put("/stats/channels/servers", new ServerChannelsEndpoint());
+		endpoints.put("/stats/filters/deny-all", new DenyAllEndpoint());
+		endpoints.put("/stats/filters/deny-ip", new DenyIpEndpoint());
+		endpoints.put("/stats/filters/deny-url", new DenyUrlEndpoint());
+		endpoints.put("/stats/filters/deny-type", new DenyTypeEndpoint());
+		endpoints.put("/stats/filters/deny-size", new DenySizeEndpoint());
+		endpoints.put("/stats/filters/l33t", new L33tEndpoint());
+		endpoints.put("/stats/filters/rotate", new RotateEndpoint());
 	}
 
 	@Override
