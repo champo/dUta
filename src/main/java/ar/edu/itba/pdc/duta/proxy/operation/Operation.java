@@ -87,7 +87,7 @@ public class Operation {
 		
 		if (serverMessageHandler != null && serverMessageHandler.wroteBody()) {
 			logger.warn("Wont write filter message since headers were written already");
-			abort();
+			close();
 			return;
 		}
 
@@ -155,10 +155,12 @@ public class Operation {
 		
 		if (clientMessageHandler != null) {
 			clientMessageHandler.collect();
+			clientMessageHandler = null;
 		}
 		
 		if (serverMessageHandler != null) {
 			serverMessageHandler.collect();
+			serverMessageHandler = null;
 		}
 	}
 

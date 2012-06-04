@@ -194,8 +194,10 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	@Override
 	public void abort() {
-		buffer.release();
-		buffer = null;
+		if (buffer != null) {
+			buffer.release();
+			buffer = null;
+		}
 		
 		for (DataBuffer buffer : outputQueue) {
 			buffer.release();
