@@ -22,6 +22,14 @@
         <url>https://github.com/champo/dUta/issues</url>
     </issueManagement>
 
+    <repositories>
+        <repository>
+            <id>monits-external</id>
+            <url>http://nexus.monits.com/content/repositories/external/</url>
+            <name>Monits external</name>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
