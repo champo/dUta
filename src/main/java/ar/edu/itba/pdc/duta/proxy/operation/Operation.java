@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Connection;
 import ar.edu.itba.pdc.duta.http.model.Message;
@@ -201,6 +202,10 @@ public class Operation {
 
 	public DataBuffer setServerHeader(ResponseHeader header) {
 		closeServer = Connection.checkStatus(header) == Connection.CLOSE;
+		
+		if (!Grammar.HTTP11.equalsIgnoreCase(header.getHTTPVersion())) {
+			closeClient = true;
+		}
 
 		List<OperationFilter> responseFilters = new ArrayList<OperationFilter>();
 

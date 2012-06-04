@@ -8,6 +8,8 @@ import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 public class Http10Parser implements BodyParser {
 
 	private Message msg;
+	
+	private boolean done = false;
 
 	public Http10Parser(Message msg) {
 		this.msg = msg;
@@ -18,13 +20,19 @@ public class Http10Parser implements BodyParser {
 		DataBuffer body = msg.getBody();
 		
 		int old = body.getWriteIndex();
-		body.consume(Short.MAX_VALUE);
+		try {
+			body.consume(Short.MAX_VALUE);
+		} catch (IOException e) {
+			done = true;
+			return 0;
+		}
+		
 		return body.getWriteIndex() - old;
 	}
 
 	@Override
 	public boolean isComplete() {
-		return false;
+		return done;
 	}
 
 }

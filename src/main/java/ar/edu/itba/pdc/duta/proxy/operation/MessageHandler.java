@@ -79,7 +79,6 @@ public class MessageHandler {
 		msg.setBody(buffer);
 		buffer.release();
 		
-		// TODO: Create the buffer as needed
 		if (!needsBody) {
 			Message res = writeHeader();
 			if (res != null) {
