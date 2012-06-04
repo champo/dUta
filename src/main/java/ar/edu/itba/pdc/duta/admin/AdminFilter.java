@@ -76,7 +76,7 @@ public class AdminFilter implements Filter {
 			Endpoint endpoint = endpoints.get(uri);
 			if (endpoint == null) {
 				
-				if (uri.startsWith("/filter/")) {
+				if (uri.startsWith("/filters/")) {
 					return deleteEndpoint.process(msg);
 				} else {
 					return MessageFactory.build404();

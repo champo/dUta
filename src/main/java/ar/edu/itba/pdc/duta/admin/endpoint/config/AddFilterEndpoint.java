@@ -1,9 +1,13 @@
 package ar.edu.itba.pdc.duta.admin.endpoint.config;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import nl.bitwalker.useragentutils.Browser;
+import nl.bitwalker.useragentutils.OperatingSystem;
 
 import org.apache.log4j.Logger;
 
@@ -68,7 +72,7 @@ public class AddFilterEndpoint extends Endpoint {
 		}
 		
 		Set<Object> matches = extractMatches(tree);
-		if (matches == null) {
+		if (matches == null || matches.isEmpty()) {
 			return MessageFactory.build400();
 		}
 		
@@ -80,7 +84,42 @@ public class AddFilterEndpoint extends Endpoint {
 	}
 
 	private Set<Object> extractMatches(JsonNode tree) {
-		return null;
+		JsonNode applyNode = tree.get("apply");
+		if (applyNode == null || !applyNode.isArray()) {
+			return null;
+		}
+		
+		Set<Object> matches = new HashSet<Object>();
+		for (JsonNode el : applyNode) {
+			
+			if (el.has("os")) {
+				
+				try {
+					matches.add(OperatingSystem.valueOf(el.get("os").asText()));
+				} catch (IllegalArgumentException e) {
+					logger.warn("String " + el.get("os").asText() + " is not a valid OS");
+					return null;
+				}
+				
+			} else if (el.has("ip")) {
+				
+				matches.add(el.get("ip").asText());
+				
+			} else if (el.has("browser")) {
+				
+				try {
+					matches.add(Browser.valueOf(el.get("browser").asText()));
+				} catch (IllegalArgumentException e) {
+					logger.warn("String " + el.get("browser").asText() + " is not a valid browser");
+					return null;
+				}
+				
+			} else {
+				return null;
+			}
+		}
+		
+		return matches;
 	}
 
 	private Filter extractFilter(JsonNode tree) {

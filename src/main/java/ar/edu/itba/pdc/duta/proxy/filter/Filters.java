@@ -105,7 +105,7 @@ public class Filters {
 
 	public boolean removeFilter(int id) {
 
-		Set<Object> matches = filterMatches.put(id, null);
+		Set<Object> matches = filterMatches.remove(id);
 
 		if (matches == null) {
 			return false;
