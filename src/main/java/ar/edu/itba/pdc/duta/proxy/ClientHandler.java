@@ -1,5 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy;
 
+import java.nio.channels.SocketChannel;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -65,11 +66,11 @@ public class ClientHandler extends AbstractChannelHandler {
 	}
 
 	@Override
-	protected void processHeader(MessageHeader header) {
+	protected void processHeader(MessageHeader header, SocketChannel channel) {
 		currentOperation = new Operation(this);
 		ops.add(currentOperation);
 		
-		buffer = currentOperation.setClientHeader((RequestHeader) header);
+		buffer = currentOperation.setClientHeader((RequestHeader) header, channel);
 		if (buffer != null) {
 			buffer.retain();
 		}

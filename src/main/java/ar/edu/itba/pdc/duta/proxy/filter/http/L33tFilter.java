@@ -86,4 +86,10 @@ public class L33tFilter implements Filter {
 		}
 	}
 
+	@Override
+	public int getPriority() {
+
+		return 0;
+	}
+
 }

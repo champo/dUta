@@ -16,26 +16,31 @@ import org.apache.log4j.Logger;
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.proxy.ConnectionPool;
 import ar.edu.itba.pdc.duta.proxy.ClientHandler;
+import ar.edu.itba.pdc.duta.proxy.filter.Filters;
 
 
 @ThreadSafe
 public class Server {
-	
+
 	public static final Logger logger = Logger.getLogger(Server.class);
 
 	private static Server instance;
-	
+
 	private ReactorPool reactorPool;
-	
+
 	private ConnectionPool resolver;
-	
+
+	private Filters filters;
+
+
 	private Server() {
 		super();
 		resolver = new ConnectionPool();
+		filters = new Filters();
 	}
-	
+
 	public void start() {
-		
+
 		Logger logger = Logger.getLogger(Server.class);
 		try {
 			runReactors();
@@ -124,5 +129,9 @@ public class Server {
 	
 	public static ConnectionPool getConnectionPool() {
 		return instance.resolver;
+	}
+
+	public Filters getFilters() {
+		return filters;
 	}
 }

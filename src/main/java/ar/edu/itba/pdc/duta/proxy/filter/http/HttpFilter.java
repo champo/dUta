@@ -33,7 +33,7 @@ public class HttpFilter implements Filter {
 		public Interest checkInterest(MessageHeader header) {
 			return new Interest(true, false, false);
 		}
-		
+
 		@Override
 		public Message processHeader(Operation op, MessageHeader header) {
 			header.setField("Via", "dUta");
@@ -41,9 +41,8 @@ public class HttpFilter implements Filter {
 
 			return null;
 		}
-		
 	}
-	
+
 	private static class RequestPart extends FilterPart {
 
 		@Override
@@ -53,20 +52,20 @@ public class HttpFilter implements Filter {
 
 		@Override
 		public Message processHeader(Operation op, MessageHeader header) {
-				
+
 			// These are proxy specific headers that make origin servers go boom
 			header.removeField("Proxy-Connection");
 			header.removeField("Proxy-Authenticate");
 			header.removeField("Proxy-Authorization");
-			
+
 			RequestHeader request = (RequestHeader) header;
-			
+
 			try {
 				URL url = new URL(request.getRequestURI());
 				if (header.getField("Host") == null) {
 					header.setField("Host", url.getHost());
 				} 
-				
+
 				String file = url.getFile();
 				if (file.isEmpty()) {
 					request.setRequestURI("/");
@@ -76,9 +75,14 @@ public class HttpFilter implements Filter {
 			} catch (MalformedURLException e) {
 				// This is cool, I think
 			}
-			
+
 			return null;
 		}
+	}
 
+	@Override
+	public int getPriority() {
+
+		return Integer.MAX_VALUE;
 	}
 }

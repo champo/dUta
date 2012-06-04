@@ -2,6 +2,7 @@ package ar.edu.itba.pdc.duta.proxy.operation;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,11 +47,11 @@ public class Operation {
 		clientHandler = requestChannelHandler;
 	}
 
-	public DataBuffer setClientHeader(RequestHeader header) {
+	public DataBuffer setClientHeader(RequestHeader header, SocketChannel channel) {
 
 		closeClient = Connection.checkStatus(header) == Connection.CLOSE;
 
-		buildFilterList(header);
+		filters = null;
 
 		List<OperationFilter> requestFilters = new ArrayList<OperationFilter>();
 
@@ -126,16 +127,6 @@ public class Operation {
 		} else {
 			return new InetSocketAddress(host, 80);
 		}
-	}
-
-	private void buildFilterList(RequestHeader header) {
-		// FIXME: Get this from somewhere else
-		filters = new ArrayList<Filter>();
-		filters.add(new HttpFilter());
-		//filters.add(new L33tFilter());
-		//filters.add(new BlockFilter());
-		//filters.add(new MediaTypeFilter("image/jpeg"));
-		//filters.add(new IPFilter("69.171.247.53"));
 	}
 
 	public void abort() {

@@ -69,4 +69,9 @@ public class MediaTypeFilter implements Filter {
 		
 	}
 
+	@Override
+	public int getPriority() {
+
+		return 16;
+	}
 }

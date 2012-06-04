@@ -92,4 +92,9 @@ public class SizeFilter implements Filter {
 
 	}
 
+	@Override
+	public int getPriority() {
+
+		return 16;
+	}
 }

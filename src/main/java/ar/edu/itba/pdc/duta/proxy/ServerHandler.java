@@ -1,6 +1,7 @@
 package ar.edu.itba.pdc.duta.proxy;
 
 import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
 
 import org.apache.log4j.Logger;
 
@@ -69,7 +70,7 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 	}
 
 	@Override
-	protected void processHeader(MessageHeader header) {
+	protected void processHeader(MessageHeader header, SocketChannel channel) {
 		
 		if (currentOperation == null) {
 			return;

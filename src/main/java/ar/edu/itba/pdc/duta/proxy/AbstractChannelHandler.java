@@ -152,13 +152,13 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		buffer.readFrom(channel);
 
 		if (parser != null) {
-			parseHeader();
+			parseHeader(channel);
 		} else {
 			processBody();
 		}
 	}
 
-	private void parseHeader() {
+	private void parseHeader(SocketChannel channel) {
 
 		int pos = buffer.getWriteIndex();
 
@@ -188,7 +188,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			buffer.release();
 			buffer = null;
 
-			processHeader(header);
+			processHeader(header, channel);
 		}
 	}
 
@@ -208,7 +208,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	
 	protected abstract MessageParser newParser();
 
-	protected abstract void processHeader(MessageHeader header);
+	protected abstract void processHeader(MessageHeader header, SocketChannel channel);
 
 	protected abstract void processBody();
 }

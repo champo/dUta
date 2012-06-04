@@ -102,4 +102,9 @@ public class URIFilter implements Filter {
 		
 	}
 
+	@Override
+	public int getPriority() {
+
+		return 16;
+	}
 }

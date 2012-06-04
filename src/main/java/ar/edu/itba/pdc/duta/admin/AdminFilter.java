@@ -64,5 +64,11 @@ public class AdminFilter implements Filter {
 		}
 		
 	}
-	
+
+	@Override
+	public int getPriority() {
+
+		return 0;
+	}
+
 }

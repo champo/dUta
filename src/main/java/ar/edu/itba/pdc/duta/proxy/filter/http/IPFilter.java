@@ -23,7 +23,7 @@ public class IPFilter implements Filter {
 		Stats.registerFilterType(IPFilter.class);
 	}
 
-	private final Pattern pattern; 
+	private final Pattern pattern;
 	private boolean blocked=false;
 	
 	public IPFilter(String ipBlocked) {
@@ -109,4 +109,9 @@ public class IPFilter implements Filter {
 		
 	}
 
+	@Override
+	public int getPriority() {
+
+		return 16;
+	}
 }

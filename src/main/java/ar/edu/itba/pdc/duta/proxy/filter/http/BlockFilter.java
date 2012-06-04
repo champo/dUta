@@ -31,22 +31,28 @@ public class BlockFilter implements Filter {
 	}
 
 	public static class RequestPart extends FilterPart {
-		
+
 		@Override
 		public Interest checkInterest(MessageHeader header) {
 			return new Interest(true, false, false);
 		}
-		
+
 		@Override
 		public Message processHeader(Operation op, MessageHeader header) {
 			Map<String, String> fields = new HashMap<String, String>();
-			
+
 			fields.put("Date", new Date().toString());
 			fields.put("Content-Type", "text/html");
 			fields.put("Content-Length", "0");
-			
+
 			ResponseHeader headers = new ResponseHeader(Grammar.HTTP11, 404, "Not Found", fields);
 			return new Message(headers);
-		}		
+		}
+	}
+
+	@Override
+	public int getPriority() {
+
+		return 16;
 	}
 }
