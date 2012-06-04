@@ -292,8 +292,9 @@ public class MediaType {
 		for (Map.Entry<String, String> entry : parameters.entrySet()) {
 			stringBuilder.append(";");
 			stringBuilder.append(entry.getKey());
-			stringBuilder.append("=");
+			stringBuilder.append("= \"");
 			stringBuilder.append(entry.getValue());
+			stringBuilder.append('"');
 		}
 		
 		return stringBuilder.toString();
