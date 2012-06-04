@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import nl.bitwalker.useragentutils.Browser;
 import nl.bitwalker.useragentutils.OperatingSystem;
-
 import ar.edu.itba.pdc.duta.admin.AdminFilter;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
@@ -55,9 +54,20 @@ public class Filters {
 
 		Set<Integer> matchingFilters = new HashSet<Integer>();
 
-		matchingFilters.addAll(filterMultimap.get(Browser.parseUserAgentString(header.getField("User-Agent"))));
-		matchingFilters.addAll(filterMultimap.get(OperatingSystem.parseUserAgentString(header.getField("User-Agent"))));
-		matchingFilters.addAll(filterMultimap.get(channel.socket().getLocalAddress().getHostAddress()));
+		BlockingQueue<Integer> browserList = filterMultimap.get(Browser.parseUserAgentString(header.getField("User-Agent")));
+		if (browserList != null) {
+			matchingFilters.addAll(browserList);
+		}
+		
+		BlockingQueue<Integer> osList = filterMultimap.get(OperatingSystem.parseUserAgentString(header.getField("User-Agent")));
+		if (osList != null) {
+			matchingFilters.addAll(osList);
+		}
+		
+		BlockingQueue<Integer> ipList = filterMultimap.get(channel.socket().getLocalAddress().getHostAddress());
+		if (ipList != null) {
+			matchingFilters.addAll(ipList);
+		}
 
 		for (Integer id : matchingFilters) {
 			ret.add(filterIds.get(id));

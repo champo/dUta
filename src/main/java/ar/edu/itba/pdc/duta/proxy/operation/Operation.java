@@ -19,7 +19,6 @@ import ar.edu.itba.pdc.duta.proxy.ClientHandler;
 import ar.edu.itba.pdc.duta.proxy.ServerHandler;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
-import ar.edu.itba.pdc.duta.proxy.filter.http.HttpFilter;
 
 public class Operation {
 
@@ -51,8 +50,7 @@ public class Operation {
 
 		closeClient = Connection.checkStatus(header) == Connection.CLOSE;
 
-		filters = null;
-
+		filters = Server.getFilters().getFilterList(channel, header);
 		List<OperationFilter> requestFilters = new ArrayList<OperationFilter>();
 
 		for (Filter filter : filters) {
@@ -86,7 +84,7 @@ public class Operation {
 
 	private void writeMessage(Message res) {
 		
-		if (serverMessageHandler != null && serverMessageHandler.wroteBody()) {
+		if (serverMessageHandler != null && serverMessageHandler.wroteHeader()) {
 			logger.warn("Wont write filter message since headers were written already");
 			close();
 			return;

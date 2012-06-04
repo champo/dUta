@@ -14,8 +14,8 @@ import net.jcip.annotations.ThreadSafe;
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
-import ar.edu.itba.pdc.duta.proxy.ConnectionPool;
 import ar.edu.itba.pdc.duta.proxy.ClientHandler;
+import ar.edu.itba.pdc.duta.proxy.ConnectionPool;
 import ar.edu.itba.pdc.duta.proxy.filter.Filters;
 
 
@@ -131,7 +131,7 @@ public class Server {
 		return instance.resolver;
 	}
 
-	public Filters getFilters() {
-		return filters;
+	public static Filters getFilters() {
+		return instance.filters;
 	}
 }

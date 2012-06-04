@@ -35,7 +35,7 @@ public class MessageHandler {
 
 	private boolean hasBody = true;
 	
-	private boolean wroteBody = false;
+	private boolean wroteHeader = false;
 	
 	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel, boolean hasBody) {
 		this(header, filters, outputChannel);
@@ -235,13 +235,13 @@ public class MessageHandler {
 			return MessageFactory.build500();
 		}
 		
-		wroteBody = true;
+		wroteHeader = true;
 
 		return null;
 	}
 	
-	public boolean wroteBody() {
-		return wroteBody;
+	public boolean wroteHeader() {
+		return wroteHeader;
 	}
 
 	public boolean isMessageComplete() {
