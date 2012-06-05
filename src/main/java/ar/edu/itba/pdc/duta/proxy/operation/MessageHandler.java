@@ -257,7 +257,6 @@ public class MessageHandler {
 	}
 
 	public void collect() {
-		complete = true;
 		msg.setBody(null);
 	}
 	

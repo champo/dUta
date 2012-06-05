@@ -42,9 +42,13 @@ public class ClientHandler extends AbstractChannelHandler {
 	public void abort() {
 		super.abort();
 
+		logger.fatal("current " + currentOperation + " ops " + ops + " buff " + buffer);
+		
 		currentOperation = null;
 		buffer = null;
-		for (Operation op : ops) {
+		
+		Operation op;
+		while ((op = ops.poll()) != null) {
 			op.abort();
 			for (DataBuffer buff : queuedOutput.get(op)) {
 				buff.release();

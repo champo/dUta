@@ -50,7 +50,7 @@ public class Operation {
 		clientHandler = requestChannelHandler;
 	}
 
-	public DataBuffer setClientHeader(RequestHeader header, SocketChannel channel) {
+	public synchronized DataBuffer setClientHeader(RequestHeader header, SocketChannel channel) {
 
 		closeClient = Connection.checkStatus(header) == Connection.CLOSE;
 
@@ -213,7 +213,7 @@ public class Operation {
 		closed = true;
 	}
 
-	public void addClientBody() {
+	public synchronized void addClientBody() {
 		Message res = clientMessageHandler.append(this);
 		if (res != null) {
 			closeClient = true;
@@ -221,11 +221,11 @@ public class Operation {
 		}
 	}
 
-	public boolean isClientMessageComplete() {
+	public synchronized boolean isClientMessageComplete() {
 		return clientMessageHandler.isMessageComplete();
 	}
 
-	public DataBuffer setServerHeader(ResponseHeader header) {
+	public synchronized DataBuffer setServerHeader(ResponseHeader header) {
 		closeServer = Connection.checkStatus(header) == Connection.CLOSE;
 		
 		if (!Grammar.HTTP11.equalsIgnoreCase(header.getHTTPVersion())) {
@@ -253,7 +253,7 @@ public class Operation {
 		return serverMessageHandler.getBuffer();
 	}
 
-	public void addServerBody() {
+	public synchronized void addServerBody() {
 
 		Message res = serverMessageHandler.append(this);
 		if (res != null) {
