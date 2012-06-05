@@ -163,7 +163,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		int pos = buffer.getWriteIndex();
 
 		try {
-			parser.parse(buffer);
+			parser.parse(buffer, this instanceof ClientHandler);
 		} catch (ParseException e) {
 			logger.error("Aborting request due to malformed headers", e);
 			abort();

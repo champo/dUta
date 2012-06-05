@@ -214,7 +214,7 @@ public class Operation {
 	}
 
 	public synchronized void addClientBody() {
-		Message res = clientMessageHandler.append(this);
+		Message res = clientMessageHandler.append(this, true);
 		if (res != null) {
 			closeClient = true;
 			writeMessage(res);
@@ -255,7 +255,7 @@ public class Operation {
 
 	public synchronized void addServerBody() {
 
-		Message res = serverMessageHandler.append(this);
+		Message res = serverMessageHandler.append(this, false);
 		if (res != null) {
 			writeMessage(res);
 		} else if (serverMessageHandler.isMessageComplete()) {

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Message;
@@ -165,10 +166,17 @@ public class MessageHandler {
 		complete = parser.isComplete();
 	}
 
-	public Message append(Operation op) {
-		
+	public Message append(Operation op, boolean client) {
+	
 		try {
-			size += parser.parse();
+			int bytes = parser.parse(); 
+			size += bytes;
+
+			if (client) {
+				Stats.addClientTraffic(bytes);
+			} else {
+				Stats.addServerTraffic(bytes);
+			}
 		} catch (IOException e) {
 			logger.warn("Failed while parsing a message body", e);
 			return MessageFactory.build500();
