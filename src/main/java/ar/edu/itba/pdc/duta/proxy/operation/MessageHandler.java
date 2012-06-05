@@ -38,6 +38,8 @@ public class MessageHandler {
 	
 	private boolean wroteHeader = false;
 	
+	private boolean mayTransform = false;
+	
 	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel, boolean hasBody) {
 		this(header, filters, outputChannel);
 		this.hasBody = hasBody;
@@ -52,6 +54,7 @@ public class MessageHandler {
 
 		for (OperationFilter filter : filters) {
 			logger.debug("Filter " + filter.part);
+			mayTransform |= filter.interest.full();
 			if (filter.interest.bytesRecieved() || filter.interest.full()) {
 				needsBody = true;
 			}
@@ -70,6 +73,10 @@ public class MessageHandler {
 					return result;
 				}
 			}
+		}
+		
+		if (mayTransform) {
+			msg.getHeader().removeField("Accept-Encoding");
 		}
 
 		if (!createParser()) {
