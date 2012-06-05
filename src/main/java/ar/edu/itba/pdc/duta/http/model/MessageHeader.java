@@ -62,7 +62,12 @@ public abstract class MessageHeader {
 		res.append(getStartLine());
 		
 		for (Map.Entry<String, String> field : fields.entrySet()) {
-			res.append(fieldNames.get(field.getKey()))
+			String name = fieldNames.get(field.getKey());
+			if (name == null) {
+				name = field.getKey();
+			}
+			
+			res.append(name)
 				.append(": ")
 				.append(field.getValue())
 				.append("\r\n");
