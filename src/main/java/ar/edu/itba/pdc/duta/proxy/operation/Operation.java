@@ -16,6 +16,7 @@ import ar.edu.itba.pdc.duta.http.model.Connection;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
+import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.proxy.ClientHandler;
@@ -78,14 +79,15 @@ public class Operation {
 
 		Message res = clientMessageHandler.processHeader(this);
 		if (res != null) {
+			closeClient = true;
 			writeMessage(res);
 			return null;
 		}
-
+		
 		return clientMessageHandler.getBuffer();
 	}
 
-	private void writeMessage(Message res) {
+	private synchronized void writeMessage(Message res) {
 		
 		if (serverMessageHandler != null && serverMessageHandler.wroteHeader()) {
 			logger.warn("Wont write filter message since headers were written already");
@@ -97,7 +99,7 @@ public class Operation {
 
 		try {
 			DataBuffer buffer = new DataBuffer(res.getHeader().toString().getBytes("ascii"));
-			clientHandler.queueOutput(buffer);
+			clientHandler.queueOutput(buffer, this);
 			buffer.release();
 		} catch (UnsupportedEncodingException e) {
 			// If this happens, the world is screwed
@@ -107,7 +109,7 @@ public class Operation {
 			return;
 		}
 
-		clientHandler.queueOutput(res.getBody());
+		clientHandler.queueOutput(res.getBody(), this);
 		close();
 	}
 
@@ -149,7 +151,7 @@ public class Operation {
 		}
 	}
 
-	public void abort() {
+	public synchronized void abort() {
 
 		if (serverProxy != null && serverProxy.getChannel() != null) {
 			ServerHandler handler = serverProxy.getChannel();
@@ -175,7 +177,7 @@ public class Operation {
 		}
 	}
 
-	public void close() {
+	public synchronized void close() {
 
 		if (serverProxy != null && serverProxy.getChannel() != null) {
 			
@@ -200,12 +202,13 @@ public class Operation {
 		if (clientHandler != null) {
 
 			clientHandler.operationComplete();
+			
 			if (closeClient) {
 				clientHandler.close();
 			}
-
+			clientHandler = null;
+			
 		}
-		clientHandler = null;
 
 		closed = true;
 	}
@@ -213,12 +216,13 @@ public class Operation {
 	public void addClientBody() {
 		Message res = clientMessageHandler.append(this);
 		if (res != null) {
+			closeClient = true;
 			writeMessage(res);
 		}
 	}
 
 	public boolean isClientMessageComplete() {
-		return closed || clientMessageHandler.isMessageComplete();
+		return clientMessageHandler.isMessageComplete();
 	}
 
 	public DataBuffer setServerHeader(ResponseHeader header) {
@@ -237,7 +241,9 @@ public class Operation {
 			}
 		}
 
-		serverMessageHandler = new MessageHandler(header, responseFilters, clientHandler, !isHead);
+		OutputChannel clientProxy = new ClientProxy(this, clientHandler);
+		
+		serverMessageHandler = new MessageHandler(header, responseFilters, clientProxy, !isHead);
 		Message res = serverMessageHandler.processHeader(this);
 		if (res != null) {
 			writeMessage(res);

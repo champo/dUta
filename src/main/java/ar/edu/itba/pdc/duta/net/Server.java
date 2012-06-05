@@ -110,6 +110,7 @@ public class Server {
 	
 	private void runReactors() throws IOException {
 		int threads = 2 * Runtime.getRuntime().availableProcessors();
+		//int threads = 2;
 		reactorPool = new ReactorPool(threads);
 		reactorPool.start();
 	}
@@ -139,7 +140,7 @@ public class Server {
 		socket.socket().setTcpNoDelay(true);
 		socket.connect(remote);
 		
-		registerChannel(socket, handler);
+		instance.getReactor().addChannel(socket, handler);
 	}
 	
 	public static ConnectionPool getConnectionPool() {
@@ -149,4 +150,5 @@ public class Server {
 	public static Filters getFilters() {
 		return instance.filters;
 	}
+
 }

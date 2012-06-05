@@ -33,10 +33,11 @@ public class ChannelProxy implements OutputChannel {
 		}
 
 		logger.debug("Queueing output: " + buff);
-		channel.queueOutput(buff);
+		channel.queueOutput(buff, op);
 	}
 
 	private void openChannel() {
+		
 		logger.debug("Opening channel...");
 		channel = Server.getConnectionPool().getConnection(address);
 		if (channel == null) {

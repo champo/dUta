@@ -10,17 +10,16 @@ import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
 import ar.edu.itba.pdc.duta.http.parser.MessageParser;
 import ar.edu.itba.pdc.duta.http.parser.ResponseParser;
-import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
-public class ServerHandler extends AbstractChannelHandler implements OutputChannel {
+public class ServerHandler extends AbstractChannelHandler {
 
 	private static Logger logger = Logger.getLogger(ServerHandler.class);
 
 	private InetSocketAddress address;
-
-	private Operation currentOperation;
+	
+	protected Operation currentOperation;
 
 	public ServerHandler(InetSocketAddress address) {
 		this.address = address;
@@ -94,6 +93,11 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 	@Override
 	protected MessageParser newParser() {
 		return new ResponseParser();
+	}
+
+	@Override
+	protected boolean canWrite(Operation op) {
+		return currentOperation == op;
 	}
 
 }

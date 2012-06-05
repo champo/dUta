@@ -50,6 +50,7 @@ public class Stats {
 	}
 	
 	public static synchronized void log() {
+		if (true) return;
 		logger.info("Inbound " + inbound + " (" + inClosed + ")");
 		logger.info("Outbound " + outbound + " (" + outClosed + ")");
 		logger.info("Traffic with clients: " + clientTraffic);

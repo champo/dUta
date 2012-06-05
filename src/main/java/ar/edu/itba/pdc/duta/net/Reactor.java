@@ -1,6 +1,7 @@
 package ar.edu.itba.pdc.duta.net;
 
 import java.io.IOException;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -34,14 +35,17 @@ public class Reactor implements Runnable {
 		synchronized (guard) {
 			selector.wakeup();
 			
-			socket.configureBlocking(false);
-			int ops = SelectionKey.OP_READ;
-			if (!socket.isConnected()) {
-				ops = SelectionKey.OP_CONNECT;
+			synchronized (handler.keyLock()) {
+				
+				socket.configureBlocking(false);
+				int ops = SelectionKey.OP_READ;
+				if (!socket.isConnected()) {
+					ops = SelectionKey.OP_CONNECT;
+				}
+				
+				SelectionKey key = socket.register(selector, ops, handler);
+				handler.setKey(new ReactorKey(key));
 			}
-			
-			SelectionKey key = socket.register(selector, ops, handler);
-			handler.setKey(new ReactorKey(key));
 		}
 	}
 	
@@ -98,6 +102,8 @@ public class Reactor implements Runnable {
 				key.attach(null);
 			}
 			
+		} catch (CancelledKeyException e) {
+			logger.warn("Got cancelled key", e);
 		} catch (Exception e) {
 			logger.warn("Closing socket due to catched exception", e);
 			
@@ -130,7 +136,7 @@ public class Reactor implements Runnable {
 			this.key = key;
 		}
 		
-		public synchronized void setInterest(boolean read, boolean write) {
+		public void setInterest(boolean read, boolean write) {
 
 			ops = 0;
 
@@ -155,22 +161,32 @@ public class Reactor implements Runnable {
 		 * The Reactor may ignore the ops request by the handler.
 		 * In that case, those ops are stored and re set after by calling this method.
 		 */
-		protected synchronized void setCachedOps() {
+		protected void setCachedOps() {
 			
 			key.interestOps(ops);
 			selector.wakeup();
 		}
-
-		public synchronized void close() {
+		
+		private void cancel() {
 			
-			key.cancel();
+			synchronized (guard) {
+				selector.wakeup();
+				key.cancel();
+			}
+		}
+
+		public void close() {
+			
+			cancel();
+			
 			try {
 				key.channel().close();
 			} catch (IOException e) {
 				logger.warn("Caught exception closing a channel.", e);
 			}
 			
-			selector.wakeup();
 		}
+
 	}
+
 }
