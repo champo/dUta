@@ -158,6 +158,10 @@ public class MessageHandler {
 	}
 
 	private void checkCompletion() {
+		if (complete) {
+			return;
+		}
+		
 		complete = parser.isComplete();
 	}
 
