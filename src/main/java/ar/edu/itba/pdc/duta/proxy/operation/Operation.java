@@ -115,6 +115,10 @@ public class Operation {
 
 	private InetSocketAddress extractAddress(RequestHeader header) {
 		
+		if (Server.getChainAddress() != null) {
+			return Server.getChainAddress();
+		}
+		
 		try {
 			URL url = new URL(header.getRequestURI());
 			if (header.getField("Host") == null) {
@@ -222,7 +226,7 @@ public class Operation {
 	}
 
 	public synchronized boolean isClientMessageComplete() {
-		return clientMessageHandler.isMessageComplete();
+		return closed || clientMessageHandler.isMessageComplete();
 	}
 
 	public synchronized DataBuffer setServerHeader(ResponseHeader header) {

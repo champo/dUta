@@ -44,7 +44,7 @@ public class Filters {
 
 		ret.add(httpFilter);
 
-		if (channel.socket().getLocalPort() == Server.ADMIN_PORT) {
+		if (channel.socket().getLocalPort() == Server.adminPort) {
 
 			ret.add(adminFilter);
 			return ret;
