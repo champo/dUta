@@ -4,12 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
-import org.apache.log4j.Logger;
-
 
 public class BufferedReadableByteChannel {
-
-	private static final Logger logger = Logger.getLogger(BufferedReadableByteChannel.class);
 
 	private ReadableByteChannel channel;
 
@@ -40,7 +36,7 @@ public class BufferedReadableByteChannel {
 				this.buffer.limit(this.buffer.position() + buffer.remaining());
 			}
 
-			bytes += this.buffer.remaining();
+			bytes += buffer.capacity();
 			buffer.put(this.buffer);
 
 			if (oldLimit != -1) {
@@ -53,16 +49,10 @@ public class BufferedReadableByteChannel {
 			this.buffer.limit(capacity);
 
 			int temp = channel.read(this.buffer);
-			this.buffer.position(0);
 
 			if (temp <= 0) {
 
 				this.buffer.limit(0);
-
-				if (bytes == 0) {
-					return temp;
-				}
-
 				return bytes;
 			}
 
