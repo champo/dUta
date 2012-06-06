@@ -18,7 +18,7 @@
 \newcommand{\awesome}[1]{\texttt{\large #1}}
 \newcommand{\ua}{\textit{User Agent} }
 \newcommand{\os}{\textit{Origin Server} }
-\newcommand{\duta}{\awesome{dUta}}
+\newcommand{\duta}{\awesome{dUta} }
 
 \maketitle
 \tableofcontents
@@ -156,18 +156,79 @@ Los recursos disponibles son:
 % }}}
 
 \section{Problemas encontrados}
+% {{{
+% }}}
 
 \section{Limitaciones}
+% {{{
+% }}}
 
 \section{Posibles extensiones}
+% {{{
+% }}}
 
 \section{Conclusiones}
+% {{{
+% }}}
 
 \section{Casos de prueba}
+% {{{
+% }}}
 
 \section{Deploy}
+% {{{
+    \subsection{Build}
+    Para el proceso de build utilizamos la herramienta \awesome{Maven}.
+    Simplemente ejecutar \texttt{mvn clean install} genera un archivo \textit{.jar} listo para ejecutar \duta.
+    El archivo se encontrara bajo la carpeta \textit{target} y tendra el nombre \textit{dUta-1.0-SNAPSHOT-jar-with-dependencies.jar}.
+
+    \subsection{Logs}
+    \duta por defecto utiliza 2 logs.
+    Uno es \textit{access.log} que registra todos los pedidos servidos por el proxy.
+    El otro es \textit{debug.log}, que registra las acciones tomadas por el proxy.
+
+    Esta configuracion puede ser cambiada editando \textit{src/main/resources/log4j.properties}.
+    Recomendamos desactivar \textit{debug.log} a la hora de hacer benchmarking.
+    Si bien no tiene un impacto importante en la perfomance, en el evento de que \textit{log4j} rote \textit{debug.log} se ve una caida temporal en la perfomance.
+
+    \subsection{Ejecutar \duta}
+    Una vez que se tiene la configuracion de log deseada, y se genera el binario con \awesome{Maven}, estamos listo para ejecutar \duta.
+    Simplemente ejectuar \texttt{java -jar target/dUta-1.0-SNAPSHOT-jar-with-dependencies.jar} inicia el proxy con la configuracion por defecto.
+
+    \subsubsection{Argumentos}
+    Opcionalmente, se pueden pasar argumentos por linea de comandos que cambian los valores de configuracion por defecto.
+    \begin{verbatim}
+        --chain=ip:port    Chain to another proxy
+        --port=port        Listen for requests on `port`
+        --admin-port=port  Listen for admin requests on `port`
+    \end{verbatim}
+
+    A motivo de ejemplo, mostramos como ejecutar \duta para que se conecte a un segundo proxy corriendo en la misma pc.
+    Asumamos que el segundo proxy ya esta utilizando el puerto 9999.
+    Por lo tanto, hay que proveer a \duta de un puerto libre para escuchar, en este caso usaremos el 8888.
+
+    Para ejecutar con esta configuracion corremos (saltos de linea introducidos por legibilidad):
+    \begin{verbatim}
+        java 
+            -jar target/dUta-1.0-SNAPSHOT-jar-with-dependencies.jar 
+            --port=8888 
+            --chain=localhost:9999
+    \end{verbatim}
+
+    \subsection{Administracion}
+    Una vez que el servidor esta corriendo, se puede utilizar el protocolo de configuracion.
+
+    Por ejemplo, para agregar un filtro que bloquee todos los requests hechos desde \textit{localhost}, podemos ejecutar:
+    \begin{verbatim}
+        curl 
+            -vvv 
+            -d '{"type": "deny-all", "apply": [{"ip": "127.0.0.1"}]}' 
+            -H "Content-Type: application/json" 
+            --basic --user "heman:masterofuniverse" 
+            localhost:1337/filters
+    \end{verbatim}
 
 
+% }}}
 
 \end{document}
-
