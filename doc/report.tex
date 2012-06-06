@@ -461,15 +461,33 @@ Los recursos disponibles son:
 
 \section{Limitaciones}
 % {{{
-    \subsection{Multipart MIME types}
 
     \subsection{Transformaciones de mensajes grandes}
+    Las transformaciones se aplican obligatoriamente en memoria.
+    Esto trae un serio problema cuando el mensaje es muy grande, ya que por mas de que se almacena en disco, para procesarlo hay que cargarlo todo.
+    Dependiendo del tamaño del mensaje, puede ocurrir que el proxy se quede sin memoria y por lo tanto, deje de servir pedidos.
+    Para mitigar este problema, ofrecemos un parametro por linea de comandos para poner un tamaño maximo a los mensajes cuando aplican transformaciones.
 
     \subsection{HTTP 1.0}
+    Si bien \duta es capaz de entender pedidos y respuestas \texttt{HTTP 1.0}, no es capaz de enviar pedidos a un servidor 1.0.
+    Es decir, si un servidor de origen no comprende \texttt{HTTP 1.0}, no vamos a poder servir requests a este con exito.
+
+    \subsection{Multipart MIME types}
+    Durante el analisis hecho para el pre-informe, notamos que podriamos procesar tipos \texttt{multipart} y detectar que otros tipos contiene.
+    La aplicacion de esto seria que los filtros y transformaciones podria ser aplicados aun cuando no todo el mensaje cumple el requisito necesario.
 
     \subsection{Retry}
+    Con la introduccion de conexiones persistentes, es posible que mientras uno empieza a enviar un pedido por una conexion al mismo tiempo el servidor de origen cierre la misma.
+    Dado que esto es normal, y no un error, es corrector reintentar en nombre del cliente que envio el pedido.
+    Sin embargo, nosotros no ofrecemos este comportamiento.
 
     \subsection{Content-Encoding}
+    \duta no puede aplicar \texttt{encodings}.
+    Normalmente, esto no seria un problema, dado que no es necesario saber que contiene el mensaje para transmitirlo.
+    Ahora, si se aplica una transformacion es necesario poder remover el encoding para obtener el mensaje original.
+
+    Para evitar problemas con las transformaciones, cuando llega un pedido al que puede aplicar una, interceptamos el header \texttt{Content-Encoding}.
+    Al remover este, nos aseguramos de que el mensaje llegue sin encoding, y podamos procesarlo de ser necesario.
 
 % }}}
 
