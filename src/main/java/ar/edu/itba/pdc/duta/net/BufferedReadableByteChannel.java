@@ -23,50 +23,78 @@ public class BufferedReadableByteChannel {
 		this.channel = channel;
 
 		buffer.position(0);
-		buffer.limit(capacity);
+		buffer.limit(0);
 	}
 
 	public int read(ByteBuffer buffer) throws IOException {
 
-		int bytes = 0;
+		if (this.buffer.remaining() > buffer.remaining()) {
 
-		while (true) {
+			int bytes = buffer.remaining();
+			int limit = this.buffer.limit();
 
-			int oldLimit = -1;
-
-			if (this.buffer.remaining() > buffer.remaining()) {
-
-				oldLimit = this.buffer.limit();
-				this.buffer.limit(this.buffer.position() + buffer.remaining());
-			}
-
-			bytes += this.buffer.remaining();
+			this.buffer.limit(this.buffer.position() + bytes);
 			buffer.put(this.buffer);
+			this.buffer.limit(limit);
 
-			if (oldLimit != -1) {
-
-				this.buffer.limit(oldLimit);
-				return bytes;
-			}
-
-			this.buffer.position(0);
-			this.buffer.limit(capacity);
-
-			int temp = channel.read(this.buffer);
-			this.buffer.position(0);
-
-			if (temp <= 0) {
-
-				this.buffer.limit(0);
-
-				if (bytes == 0) {
-					return temp;
-				}
-
-				return bytes;
-			}
-
-			this.buffer.limit(temp);
+			return bytes;
 		}
+
+		int bytes = this.buffer.remaining();
+		buffer.put(this.buffer);
+
+		if (buffer.remaining() >= capacity) {
+
+			int otherBytes = channel.read(buffer);
+
+			if (otherBytes >= 0) {
+				return bytes + otherBytes;
+			}
+
+			if (bytes > 0) {
+				return bytes;
+			}
+
+			return otherBytes;
+		}
+
+		this.buffer.position(0);
+		this.buffer.limit(capacity);
+
+		int otherBytes = channel.read(this.buffer);
+
+		this.buffer.position(0);
+
+		if (otherBytes < 0) {
+
+			this.buffer.limit(0);
+
+			if (bytes > 0) {
+				return bytes;
+			}
+
+			return otherBytes;
+		}
+
+		if (otherBytes > buffer.remaining()) {
+
+			int someBytes = buffer.remaining();
+
+			this.buffer.limit(someBytes);
+			buffer.put(this.buffer);
+			this.buffer.limit(otherBytes);
+
+			return bytes + someBytes;
+		}
+
+		this.buffer.limit(otherBytes);
+		buffer.put(this.buffer);
+
+		return bytes + otherBytes;
+	}
+
+	public boolean hasInput() {
+
+		return buffer.hasRemaining();
 	}
 }

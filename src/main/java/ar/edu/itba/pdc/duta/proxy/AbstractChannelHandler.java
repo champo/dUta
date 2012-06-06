@@ -148,13 +148,15 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			buffer = new DataBuffer();
 		}
 
-		buffer.readFrom(this.channel);
-
-		if (parser != null) {
-			parseHeader(channel);
-		} else {
-			processBody();
-		}
+		do {
+			buffer.readFrom(this.channel);
+	
+			if (parser != null) {
+				parseHeader(channel);
+			} else {
+				processBody();
+			}
+		} while(this.channel.hasInput());
 	}
 
 	private void parseHeader(SocketChannel channel) {
