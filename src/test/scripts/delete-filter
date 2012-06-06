@@ -1,0 +1,14 @@
+#!/bin/sh
+
+set -e
+
+if [[ -z $1 ]]; then
+    read -p "Insert the filter number to delete: " filter
+else
+    filter=$1
+fi
+
+curl -vvv \
+    -X DELETE \
+    --basic --user "heman:masterofuniverse" \
+    127.0.0.1:1337/filters/$filter

@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+echo 'Sending payload: {"type": "'$1'", "config": "'$2'", "apply": [{"'$3'": "'$4'"}]}'
+
+curl -vvv \
+    -H "Content-Type: application/json" \
+    --basic --user "heman:masterofuniverse" \
+    -d '{"type": "'$1'", "config": "'$2'", "apply": [{"'$3'": "'$4'"}]}' \
+    127.0.0.1:1337/filters

@@ -467,6 +467,9 @@ Los recursos disponibles son:
 
 \section{Casos de prueba}
 % {{{
+
+    Los scripts mencionados en esta seccion se encuentran bajo \texttt{src/test/scripts}.
+
     \subsection{\awesome{Firefox 12}}
     Utilizamos una instalacion de \awesome{Firefox 12} con el plugin \awesome{HttpFox}.
     \awesome{HttpFox} nos permite revisar los pedidos enviados por \awesome{Firefox} y las respuestas dadas por \duta.
@@ -485,14 +488,42 @@ Los recursos disponibles son:
     Usando \awesome{HttpFox} podemos verificar que todos los requests tengan respuestas.
 
     \subsection{Bloqueo por URI}
+    Bloqueamos para la IP 127.0.0.1 el acceso a las URIs que contienen \textit{google}.
+    Luego probamos ingresar a varios sitios con ese texto, y otros que no.
+    Los resultados esperados son:
+
+    \begin{itemize}
+        \item http://www.google.com/
+        \item http://www.google.com.ar/
+        \item http://www.facebook.com/google
+        \item http://www.facebook.com/
+    \end{itemize}
+
+    Este test se puede reproducir con el script \texttt{block-google.sh}.
 
     \subsection{Rotacion de imagenes}
+    Transformamos para la IP 127.0.0.1 las imagenes, y las rotamos 180 grados.
+    Para verificar el efecto accedemos a \texttt{http://www.wikipedia.org}.
+
+    Este efecto se puede generar ejecutando \texttt{add-filter rotate "" "ip" "127.0.0.1"}, y luego ingresando al sitio en un browser que haga uso del proxy en la ip adecuada.
 
     \subsection{Bloqueo total por browser}
+    Probamos el bloqueo por browser con \texttt{Firefox 12} y \texttt{monits.com (190.2.7.69)}.
 
-    \subsection{l33t}
+    Ejecutamos \texttt{add-filter "deny-ip" "190.2.7.69" "browser" "FIREFOX12"} y probamos de ingresar con \texttt{Firefox} a \texttt{monits.com}.
+    Esto deberia resultar en un error \texttt{404}.
+    Sin embargo, ingresar a cualquier otro sitio, deberia cargar normalmente.
 
-    \subsection{Bloqueo por tamaño}
+    \subsection{Stress test}
+    Usamos \texttt{JMeter} para probar la capacidad bajo carga de \duta.
+    Esta prueba requiere el script \texttt{dUta stresser.jmx}, y un servidor \texttt{nginx} o \texttt{apache}, configurados para alta capacidad.
+
+    Previamente a descubrir la inestabilidad del parche de \textit{buffering}, tomamos las siguientes mediciones:
+
+
+    Luego, obtuvimos los siguientes resultados:
+
+
 
 % }}}
 
