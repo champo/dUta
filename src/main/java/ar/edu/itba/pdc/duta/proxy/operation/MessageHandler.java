@@ -13,6 +13,11 @@ import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
+import ar.edu.itba.pdc.duta.http.parser.BodyParser;
+import ar.edu.itba.pdc.duta.http.parser.ChunkedParser;
+import ar.edu.itba.pdc.duta.http.parser.EmptyParser;
+import ar.edu.itba.pdc.duta.http.parser.Http10Parser;
+import ar.edu.itba.pdc.duta.http.parser.SimpleParser;
 import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 
@@ -88,7 +93,7 @@ public class MessageHandler {
 		buffer.release();
 		
 		if (!needsBody) {
-			Message res = writeHeader();
+			Message res = writeHeader(op);
 			if (res != null) {
 				return res;
 			}
@@ -228,7 +233,7 @@ public class MessageHandler {
 			}
 		}
 
-		Message res = writeHeader();
+		Message res = writeHeader(op);
 		if (res != null) {
 			return res;
 		}
@@ -238,7 +243,7 @@ public class MessageHandler {
 		return null;
 	}
 
-	private Message writeHeader() {
+	private Message writeHeader(Operation op) {
 
 		if (logger.isTraceEnabled()) {
 			logger.trace("Writing header " + msg.getHeader());
@@ -248,6 +253,8 @@ public class MessageHandler {
 			DataBuffer buffer = new DataBuffer(msg.getHeader().toString().getBytes("ascii"));
 			outputChannel.queueOutput(buffer);
 			buffer.release();
+			
+			op.logResponse(msg.getHeader());
 			
 		} catch (UnsupportedEncodingException e) {
 			// If this happens, the world is screwed

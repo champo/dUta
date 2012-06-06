@@ -1,4 +1,4 @@
-package ar.edu.itba.pdc.duta.proxy.operation;
+package ar.edu.itba.pdc.duta.http.parser;
 
 import java.io.IOException;
 

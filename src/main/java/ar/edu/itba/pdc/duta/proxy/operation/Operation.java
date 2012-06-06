@@ -14,6 +14,7 @@ import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Connection;
 import ar.edu.itba.pdc.duta.http.model.Message;
+import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
 import ar.edu.itba.pdc.duta.net.Server;
@@ -44,6 +45,8 @@ public class Operation {
 	private ChannelProxy serverProxy;
 
 	private boolean isHead;
+	
+	private RequestLog requestLog;
 
 	public Operation(ClientHandler requestChannelHandler) {
 		clientHandler = requestChannelHandler;
@@ -51,6 +54,7 @@ public class Operation {
 
 	public DataBuffer setClientHeader(RequestHeader header, SocketChannel channel) {
 
+		requestLog = new RequestLog(header);
 		closeClient = Connection.checkStatus(header) == Connection.CLOSE;
 
 		filters = Server.getFilters().getFilterList(channel, header);
@@ -93,7 +97,9 @@ public class Operation {
 			close();
 			return;
 		}
-
+		
+		logResponse(res.getHeader());
+		
 		logger.debug("Got a response message from a filter. Headers are: " + res.getHeader());
 
 		try {
@@ -155,6 +161,8 @@ public class Operation {
 	}
 
 	public void abort() {
+		
+		logResponse(null);
 
 		if (serverProxy != null && serverProxy.getChannel() != null) {
 			ServerHandler handler = serverProxy.getChannel();
@@ -167,7 +175,6 @@ public class Operation {
 			clientHandler.operationComplete();
 			clientHandler.close();
 		}
-
 		
 		if (clientMessageHandler != null) {
 			clientMessageHandler.collect();
@@ -285,6 +292,12 @@ public class Operation {
 		}
 		
 		return clientHandler.lock();
+	}
+	
+	public void logResponse(MessageHeader header) {
+		if (requestLog != null && requestLog.logResponse(header)) {
+			requestLog = null;
+		}
 	}
 
 }
