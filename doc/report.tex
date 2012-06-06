@@ -516,7 +516,13 @@ Los recursos disponibles son:
 
 \section{Conclusiones}
 % {{{
-    WTF
+    El desarrollo fue desafiante y muy interesante.
+    El diseño de un servidor que haga uso de NIO no es asunto trivial, y vimos varias iteraciones del diseño.
+
+    Nos hubiera gustado poder implementar algunas cosas como \texttt{pipelining} y \texttt{buffering}.
+    Lamentablemente, estos presentan una dificultad muy alta, y nos encontramos limitados en tiempo.
+    Dentro de las limitaciones detalladas en las secciones anterios, creemos que presentamos un proxy estable, funcional, y eficiente.
+
 % }}}
 
 \section{Casos de prueba}
@@ -559,12 +565,12 @@ Los recursos disponibles son:
     Transformamos para la IP 127.0.0.1 las imagenes, y las rotamos 180 grados.
     Para verificar el efecto accedemos a \texttt{http://www.wikipedia.org}.
 
-    Este efecto se puede generar ejecutando \texttt{add-filter rotate "" "ip" "127.0.0.1"}, y luego ingresando al sitio en un browser que haga uso del proxy en la ip adecuada.
+    Este efecto se puede generar ejecutando \texttt{add-filter rotate\ ""\ "ip"\ "127.0.0.1"}, y luego ingresando al sitio en un browser que haga uso del proxy en la ip adecuada.
 
     \subsection{Bloqueo total por browser}
     Probamos el bloqueo por browser con \texttt{Firefox 12} y \texttt{monits.com (190.2.7.69)}.
 
-    Ejecutamos \texttt{add-filter "deny-ip" "190.2.7.69" "browser" "FIREFOX12"} y probamos de ingresar con \texttt{Firefox} a \texttt{monits.com}.
+    Ejecutamos \texttt{add-filter\ "deny-ip"\ "190.2.7.69"\ "browser"\ "FIREFOX12"} y probamos de ingresar con \texttt{Firefox} a \texttt{monits.com}.
     Esto deberia resultar en un error \texttt{404}.
     Sin embargo, ingresar a cualquier otro sitio, deberia cargar normalmente.
 
