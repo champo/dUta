@@ -49,18 +49,6 @@ public class Stats {
 		outClosed++;
 	}
 	
-	public static synchronized void log() {
-		if (true) return;
-		logger.info("Inbound " + inbound + " (" + inClosed + ")");
-		logger.info("Outbound " + outbound + " (" + outClosed + ")");
-		logger.info("Traffic with clients: " + clientTraffic);
-		logger.info("Traffic with servers: " + serverTraffic);
-		
-		for (Map.Entry<Class<? extends Filter>, Long> entry : filterMatches.entrySet()) {
-			logger.info("Filter " + entry.getKey().getName() + ": " + entry.getValue());
-		}
-	}
-	
 	public static synchronized void addClientTraffic(long bytes) {
 		clientTraffic += bytes;
 	}

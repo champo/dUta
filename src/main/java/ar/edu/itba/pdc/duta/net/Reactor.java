@@ -11,8 +11,6 @@ import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
-import ar.edu.itba.pdc.duta.admin.Stats;
-
 
 @ThreadSafe
 public class Reactor implements Runnable {
@@ -57,7 +55,6 @@ public class Reactor implements Runnable {
 			try {
 
 				synchronized (guard) {
-					Stats.log();
 				}
 				selector.select();
 				

@@ -90,8 +90,6 @@ public class Server {
 							
 							socket.socket().setTcpNoDelay(true);
 							getReactor().addChannel(socket, handler);
-							
-							Stats.log();
 						}
 					}
 				}

@@ -173,8 +173,9 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 		if (header != null) {
 
-			logger.debug("Have full header...");
-			logger.debug(header);
+			if (logger.isTraceEnabled()) {
+				logger.trace(header);
+			}
 
 			buffer.release();
 			buffer = null;

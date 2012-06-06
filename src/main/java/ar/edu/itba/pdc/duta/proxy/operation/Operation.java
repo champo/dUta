@@ -194,13 +194,23 @@ public class Operation {
 		}
 		serverProxy = null;
 
-		if (serverMessageHandler != null && !serverMessageHandler.isMessageComplete()) {
-			Message res = serverMessageHandler.forceCompletion(this);
-			if (res != null) {
-				writeMessage(res);
+		if (serverMessageHandler != null) {
+			
+			if (!serverMessageHandler.isMessageComplete()) {
+				Message res = serverMessageHandler.forceCompletion(this);
+				if (res != null) {
+					writeMessage(res);
+				}
 			}
+			
+			serverMessageHandler.collect();
 		}
 		serverMessageHandler = null;
+		
+		if (clientMessageHandler != null) {
+			clientMessageHandler.collect();
+			clientMessageHandler = null;
+		}
 
 		if (clientHandler != null) {
 
