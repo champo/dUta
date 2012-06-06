@@ -46,10 +46,6 @@
 
 % }}}
 
-\section{Diseño}
-% {{{
-% }}}
-
 \section{Protocolo de administracion}
 % {{{
 
@@ -425,16 +421,42 @@ Los recursos disponibles son:
 \section{Problemas encontrados}
 % {{{
     \subsection{Concurrencia}
-    % AKA locking is haaaard
+    Dada la naturaleza de \duta, opera con un alto nivel de concurrencia bajo stress.
+    Esto significa que hay que tener una estrategia comprensiva de locking que evite producir dead locks.
+
+    Inicialmente, nos preocupo el impacto que esto podria tener en la perfomance.
+    Entonces, optamos por hacer locking lo mas fino posible, para evitar el overhead de sincronizar donde no era necesario.
+    Claramente, esto resulto ser un desafio muy complejo, y trajo muchos problemas dificiles de reproducir y aislar.
+
+    Finalmente, optamos por remover estos locks finos.
+    Esto resulto en codigo mas facil de seguir, y un proxy estable sin un verdadero impacto en la perfomance.
+    La estrategia final es simple: para todo el scope de un request y su asociado response, existe un lock que todos los componentes asociados utilizan para toda operacion.
+    Esto se garantiza a nivel reactor, ya que los handlers exponen dicho lock para que este asegure que su ejecucion ocurra de manera sincronizada.
 
     \subsection{Manejo de mensajes grandes}
     % And so, file storage came to be
 
+    Como no hay control sobre el tamaño de un mensaje, es posible que llegue un mensaje muy grande al servidor.
+    Si simplemente lo tuvieramos en memoria, podria tener un serio impacto en el proxy.
+
+    Para solucionar esto, creamos una abstraccion llamada \texttt{DataBuffer}.
+    Esta permite utilizar un buffer de manera transparente, sin saber si esta persistido en memoria o en disco.
+
     \subsection{Delimitacion de mensajes}
     % On the 3rd day came DataBuffer
 
-    \subsection{Limite de file descriptors}
-    % This is relleno.
+    Por una decision de diseño, una vez que se lee informacion a un \texttt{DataBuffer}, esta queda asociada con el request al que pertence el \texttt{DataBuffer}.
+    Resulta que si decidiamos implementar \texttt{pipelining} (que era la intencion), tendriamos problemas de perder datos.
+    Por eso cambiamos la forma en la que se leia del \texttt{SocketChannel} para que las lecturas se hagan cuando el dueño del \texttt{DataBuffer} pida los datos.
+    En contraste con leer inmediamente que llega el evento read.
+    
+    Una vez implementado esto descubrimos que tiene un alto impacto en la perfomance.
+    Dado que no se sabe donde termina un \texttt{header} mientras se lo lee, hay que leer de a bytes hasta encontrar el final.
+    Es decir: hacer una system call \texttt{read} de a un byte.
+    Intentamos solucionar este problema con una abstraccion que oculte el \texttt{SocketChannel}.
+    Este haria \textit{buffering}, mitigando el efecto de las lecturas pequeñas.
+    Lamentablemente, no llegamos a crear una version lo suficientemente estable como para entrar en la version final.
+
 % }}}
 
 \section{Limitaciones}
@@ -525,6 +547,11 @@ Los recursos disponibles son:
 
 
 
+% }}}
+
+\section{Diseño}
+% {{{
+    % put graphics here
 % }}}
 
 \section{Deploy}
