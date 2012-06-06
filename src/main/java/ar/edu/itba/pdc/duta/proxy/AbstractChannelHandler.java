@@ -143,12 +143,13 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	@Override
 	public void read(SocketChannel channel) throws IOException {
 
-		if (buffer == null) {
-			parser = newParser();
-			buffer = new DataBuffer();
-		}
 
 		do {
+			if (buffer == null) {
+				parser = newParser();
+				buffer = new DataBuffer();
+			}
+			
 			buffer.readFrom(this.channel);
 	
 			if (parser != null) {
