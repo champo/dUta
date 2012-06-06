@@ -38,8 +38,10 @@ public class Server {
 	private InetSocketAddress connectTo;
 
 	private int port;
+	
+	private int sizeLimit;
 
-	private Server(int port, int adminPort, InetSocketAddress connectTo) {
+	private Server(int port, int adminPort, InetSocketAddress connectTo, int sizeLimit) {
 		super();
 		resolver = new ConnectionPool();
 		filters = new Filters();
@@ -47,6 +49,7 @@ public class Server {
 		Server.adminPort = adminPort;
 		this.port = port;
 		this.connectTo = connectTo;
+		this.sizeLimit = sizeLimit;
 	}
 
 	public void start() {
@@ -135,6 +138,7 @@ public class Server {
 		InetSocketAddress connectTo = null;
 		int port = 9999;
 		int adminPort = 1337;
+		int sizeLimit = 100 * 1024 * 1024;
 		
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
@@ -181,6 +185,23 @@ public class Server {
 					return;
 				}
 
+			} else if (arg.startsWith("--size-limit=")) {
+
+				String portString = arg.substring(arg.indexOf('=') + 1);
+				
+				try {
+					int size = Integer.parseInt(portString);
+					if (size >= 0) {
+						sizeLimit = size;
+					}
+					continue;
+				} catch (NumberFormatException e) {
+				}
+				
+				System.out.println("'" + sizeLimit + "' is not a size number (must be in MBs)");
+				usage();
+				return;
+
 			}
 			
 		}
@@ -190,8 +211,9 @@ public class Server {
 		if (connectTo != null) {
 			System.out.println("Chaining to: " + connectTo);
 		}
+		System.out.println("Size limit: " + sizeLimit);
 		
-		Server.run(port, adminPort, connectTo);
+		Server.run(port, adminPort, connectTo, sizeLimit);
 		System.exit(0);
 	}
 
@@ -200,10 +222,11 @@ public class Server {
 		System.out.println("\t--chain=ip:port    Chain to another proxy");
 		System.out.println("\t--port=port        Listen for requests on `port`");
 		System.out.println("\t--admin-port=port  Listen for admin requests on `port`");
+		System.out.println("\t--size-limit=size  Limit the size of messages for transformations");
 	}
 
-	private static void run(int port, int adminPort, InetSocketAddress connectTo) {
-		instance = new Server(port, adminPort, connectTo);
+	private static void run(int port, int adminPort, InetSocketAddress connectTo, int sizeLimit) {
+		instance = new Server(port, adminPort, connectTo, sizeLimit);
 		instance.start();
 	}
 	
@@ -231,6 +254,10 @@ public class Server {
 	
 	public static InetSocketAddress getChainAddress() {
 		return instance.connectTo;
+	}
+	
+	public static int getSizeLimit() {
+		return instance.sizeLimit;
 	}
 
 }

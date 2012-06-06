@@ -10,6 +10,7 @@ import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
+import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
 import ar.edu.itba.pdc.duta.proxy.filter.FilterPart;
@@ -65,6 +66,10 @@ public class L33tFilter implements Filter {
 
 		@Override
 		public Message filter(Operation op, Message msg) {
+			
+			if (Server.getSizeLimit() <= msg.getBody().getWriteIndex()) {
+				return MessageFactory.build(501, "Not Implemented", null);
+			}
 
 			byte[] bytes;
 
