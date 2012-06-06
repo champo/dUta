@@ -16,7 +16,6 @@ import javax.imageio.ImageWriter;
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
-import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
@@ -95,6 +94,7 @@ public class ImageRotationFilter implements Filter {
 				DataBuffer putita = new DataBuffer(bytes); 
 				msg.setBody(putita);
 				msg.getHeader().setField("Content-Length", "" + putita.getWriteIndex());
+				msg.getHeader().removeField("Transfer-Encoding");
 
 			} catch (IOException e) {
 

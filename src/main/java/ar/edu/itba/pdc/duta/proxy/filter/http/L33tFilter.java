@@ -85,6 +85,7 @@ public class L33tFilter implements Filter {
 			DataBuffer putita = new DataBuffer(body.getBytes(charset)); 
 			msg.setBody(putita);
 			msg.getHeader().setField("Content-Length", "" + putita.getWriteIndex());
+			msg.getHeader().removeField("Transfer-Encoding");
 
 			return null;
 		}
