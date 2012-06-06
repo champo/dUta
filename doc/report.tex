@@ -46,7 +46,7 @@
 
 % }}}
 
-\section{Protocolo de administracion}
+\section{Protocolo de administración}
 % {{{
 
 Para esta seccion, tomamos la sintaxis definida por el RFC 2616 en las secciones 2.1 ``Augmented BNF'' y 2.2 ``Basic Rules''.
@@ -445,7 +445,7 @@ Los recursos disponibles son:
     \subsection{Delimitacion de mensajes}
     % On the 3rd day came DataBuffer
 
-    Por una decision de diseño, una vez que se lee informacion a un \texttt{DataBuffer}, esta queda asociada con el request al que pertence el \texttt{DataBuffer}.
+    Por una decision de diseño, una vez que se lee informacion a un \texttt{DataBuffer}, esta queda asociada con el request al que pertenece el \texttt{DataBuffer}.
     Resulta que si decidiamos implementar \texttt{pipelining} (que era la intencion), tendriamos problemas de perder datos.
     Por eso cambiamos la forma en la que se leia del \texttt{SocketChannel} para que las lecturas se hagan cuando el dueño del \texttt{DataBuffer} pida los datos.
     En contraste con leer inmediamente que llega el evento read.
