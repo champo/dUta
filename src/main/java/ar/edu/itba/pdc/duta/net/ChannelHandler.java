@@ -15,7 +15,7 @@ public interface ChannelHandler extends OutputChannel {
 	public Object keyLock();
 
 	@GuardedBy("keyLock()")
-	public void setKey(ReactorKey key, BufferedReadableByteChannel channel);
+	public void setKey(ReactorKey key);
 
 	@GuardedBy("keyLock()")
 	public ReactorKey getKey();
