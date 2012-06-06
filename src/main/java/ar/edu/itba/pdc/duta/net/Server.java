@@ -74,7 +74,15 @@ public class Server {
 						keys.remove();
 
 						ServerSocketChannel channel = (ServerSocketChannel) key.channel();
-						SocketChannel socket = channel.accept();
+						
+						SocketChannel socket;
+						try {
+							socket = channel.accept();
+						} catch (Exception e) {
+							logger.fatal("Failed to accept incoming", e);
+							continue;
+						}
+						
 						if (socket != null) {
 							
 							Stats.newInbound();
