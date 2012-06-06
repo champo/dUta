@@ -258,9 +258,9 @@ Los recursos disponibles son:
 
     Para ejecutar con esta configuracion corremos (saltos de linea introducidos por legibilidad):
     \begin{verbatim}
-        java 
-            -jar target/dUta-1.0-SNAPSHOT-jar-with-dependencies.jar 
-            --port=8888 
+        java
+            -jar target/dUta-1.0-SNAPSHOT-jar-with-dependencies.jar
+            --port=8888
             --chain=localhost:9999
     \end{verbatim}
 
@@ -269,11 +269,11 @@ Los recursos disponibles son:
 
     Por ejemplo, para agregar un filtro que bloquee todos los requests hechos desde \textit{localhost}, podemos ejecutar:
     \begin{verbatim}
-        curl 
-            -vvv 
-            -d '{"type": "deny-all", "apply": [{"ip": "127.0.0.1"}]}' 
-            -H "Content-Type: application/json" 
-            --basic --user "heman:masterofuniverse" 
+        curl
+            -vvv
+            -d '{"type": "deny-all", "apply": [{"ip": "127.0.0.1"}]}'
+            -H "Content-Type: application/json"
+            --basic --user "heman:masterofuniverse"
             localhost:1337/filters
     \end{verbatim}
 
