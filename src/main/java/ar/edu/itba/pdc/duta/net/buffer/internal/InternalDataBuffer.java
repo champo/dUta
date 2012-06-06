@@ -1,16 +1,17 @@
 package ar.edu.itba.pdc.duta.net.buffer.internal;
 
 import java.io.IOException;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+
+import ar.edu.itba.pdc.duta.net.BufferedReadableByteChannel;
 
 public interface InternalDataBuffer {
 
-	public void setInputChannel(ReadableByteChannel channel);
+	public void setInputChannel(BufferedReadableByteChannel channel);
 
 	public void setOutputChannel(WritableByteChannel channel);
 
-	public ReadableByteChannel getInputChannel();
+	public BufferedReadableByteChannel getInputChannel();
 
 	public WritableByteChannel getOutputChannel();
 

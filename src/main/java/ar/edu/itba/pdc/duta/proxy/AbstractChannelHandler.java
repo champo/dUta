@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.parser.MessageParser;
 import ar.edu.itba.pdc.duta.http.parser.ParseException;
+import ar.edu.itba.pdc.duta.net.BufferedReadableByteChannel;
 import ar.edu.itba.pdc.duta.net.ChannelHandler;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -30,12 +31,14 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	protected boolean close = false;
 
 	protected Object keyLock = new Object();
-	
+
 	protected Object lock = new Object();
 
 	private MessageParser parser;
 
 	protected DataBuffer buffer;
+
+	private BufferedReadableByteChannel channel;
 
 	public AbstractChannelHandler() {
 	}
@@ -110,11 +113,14 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	}
 
 	@Override
-	public void setKey(ReactorKey key) {
+	public void setKey(ReactorKey key, BufferedReadableByteChannel channel) {
+
 		this.key = key;
 		if (key != null) {
 			key.setInterest(true, !outputQueue.isEmpty());
 		}
+
+		this.channel = channel;
 	}
 
 	public void close() {
@@ -142,13 +148,15 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			buffer = new DataBuffer();
 		}
 
-		buffer.readFrom(channel);
-
-		if (parser != null) {
-			parseHeader(channel);
-		} else {
-			processBody();
-		}
+		do {
+			buffer.readFrom(this.channel);
+	
+			if (parser != null) {
+				parseHeader(channel);
+			} else {
+				processBody();
+			}
+		} while(this.channel.hasInput());
 	}
 
 	private void parseHeader(SocketChannel channel) {
@@ -200,22 +208,22 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 		outputQueue.clear();
 	}
-	
+
 	@Override
 	public Object keyLock() {
 		return keyLock;
 	}
-	
+
 	@Override
 	public Object lock() {
 		return lock;
 	}
-	
+
 	protected abstract MessageParser newParser();
 
 	protected abstract void processHeader(MessageHeader header, SocketChannel channel);
 
 	protected abstract void processBody();
-	
-	
+
+
 }
