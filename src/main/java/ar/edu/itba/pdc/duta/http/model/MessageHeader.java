@@ -62,7 +62,9 @@ public abstract class MessageHeader {
 		res.append(getStartLine());
 		
 		for (Map.Entry<String, String> field : fields.entrySet()) {
-			res.append(fieldNames.get(field.getKey()))
+			String name = fieldNames.get(field.getKey());
+			
+			res.append(name)
 				.append(": ")
 				.append(field.getValue())
 				.append("\r\n");
@@ -80,8 +82,12 @@ public abstract class MessageHeader {
 	protected abstract String getStartLine();
 
 	public void setField(String name, String value) {
-		
-		fields.put(name, value);
+
+		String complyName = WordUtils.capitalizeFully(name, '-');
+
+		if (fields.put(complyName, value) == null) {
+			fieldNames.put(complyName, name);
+		}
 	}
 	
 	public void removeField(String name) {

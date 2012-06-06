@@ -1,9 +1,8 @@
 package ar.edu.itba.pdc.duta.proxy.filter.http;
 
-import javax.ws.rs.core.MediaType;
-
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
+import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.proxy.filter.Filter;
@@ -45,7 +44,7 @@ public class MediaTypeFilter implements Filter {
 		@Override
 		public Message processHeader(Operation op, MessageHeader header) {
 
-			if (MediaType.valueOf(header.getField("Content-Type")).isCompatible(mediaType)) {
+			if (mediaType.isCompatible(MediaType.valueOf(header.getField("Content-Type")))) {
 
 				return MessageFactory.build404();
 			}

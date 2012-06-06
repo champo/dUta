@@ -1,8 +1,6 @@
 package ar.edu.itba.pdc.duta.proxy;
 
 import java.nio.channels.SocketChannel;
-import java.util.ArrayDeque;
-import java.util.Queue;
 
 import org.apache.log4j.Logger;
 
@@ -16,14 +14,11 @@ import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 public class ClientHandler extends AbstractChannelHandler {
 
 	private static Logger logger = Logger.getLogger(ClientHandler.class);
-
-	private Queue<Operation> ops;
-
-	private Operation currentOperation;
-
+	
+	protected Operation currentOperation;
+	
 	public ClientHandler() {
 		super();
-		ops = new ArrayDeque<Operation>();
 	}
 
 	@Override
@@ -35,49 +30,39 @@ public class ClientHandler extends AbstractChannelHandler {
 	@Override
 	public void abort() {
 		super.abort();
-
 		currentOperation = null;
-		buffer = null;
-		for (Operation op : ops) {
-			op.abort();
-		}
-
 		close();
 	}
 
 	@Override
-	public void wroteBytes(long bytes) {
+	protected void wroteBytes(long bytes) {
 		Stats.addClientTraffic(bytes);
 	}
 
 	public void operationComplete() {
+
 		logger.debug("Detaching from op...");
-		ops.poll();
+		currentOperation = null;
+
+		if (buffer != null) {
+			buffer.release();
+		}
+		buffer = null;
 	}
 
 	@Override
 	protected void processBody() {
 		currentOperation.addClientBody();
-
-		if (currentOperation.isClientMessageComplete()) {
-			currentOperation = null;
-			buffer = null;
-		}
 	}
 
 	@Override
 	protected void processHeader(MessageHeader header, SocketChannel channel) {
+		
 		currentOperation = new Operation(this);
-		ops.add(currentOperation);
 		
 		buffer = currentOperation.setClientHeader((RequestHeader) header, channel);
 		if (buffer != null) {
 			buffer.retain();
-		}
-		
-		if (currentOperation.isClientMessageComplete()) {
-			currentOperation = null;
-			buffer = null;
 		}
 	}
 
@@ -85,4 +70,5 @@ public class ClientHandler extends AbstractChannelHandler {
 	protected MessageParser newParser() {
 		return new RequestParser();
 	}
+
 }

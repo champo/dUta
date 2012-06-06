@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 
+import net.jcip.annotations.GuardedBy;
+
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.net.BufferedReadableByteChannel;
@@ -22,6 +24,8 @@ public class DataBuffer {
 	private int maxDynamicDataBufferSize = 0x1400000; // 20 MB...
 	
 	private boolean keepBuffer = true;
+	
+	private Object lock = new Object();
 
 
 	public DataBuffer() {
@@ -55,55 +59,72 @@ public class DataBuffer {
 	// To read, use get or consume
 	public void readFrom(BufferedReadableByteChannel channel) {
 
-		buffer.setInputChannel(channel);
+		synchronized (lock) {
+			buffer.setInputChannel(channel);
+		}
 	}
 
 	// Writes everything (from ReadIndex) to the given output channel
 	public void writeTo(WritableByteChannel channel) throws IOException {
 
-		buffer.setOutputChannel(channel);
-		buffer.write();
+		synchronized (lock) {
+			buffer.setOutputChannel(channel);
+			buffer.write();
 
-		if (!keepBuffer && !hasReadableBytes()) {
+			if (!keepBuffer && !hasReadableBytes()) {
 
-			buffer.setReadIndex(0);
-			buffer.setWriteIndex(0);
+				buffer.setReadIndex(0);
+				buffer.setWriteIndex(0);
+			}
 		}
 	}
 
 
 	public int getReadIndex() {
 
-		return buffer.getReadIndex();
+		synchronized (lock) {
+			return buffer.getReadIndex();
+		}
 	}
 
 	public void setReadIndex(int index) {
 
-		buffer.setReadIndex(index);
+		synchronized (lock) {
+			buffer.setReadIndex(index);
+		}
 	}
 
 	public int getWriteIndex() {
 
-		return buffer.getWriteIndex();
+		synchronized (lock) {
+			return buffer.getWriteIndex();
+		}
 	}
 
 	public void setWriteIndex(int index) {
 
-		buffer.setWriteIndex(index);
+		synchronized (lock) {
+			buffer.setWriteIndex(index);
+		}
 	}
 
 
 	public boolean hasReadableBytes() {
 
-		return buffer.getWriteIndex() > buffer.getReadIndex();
+		synchronized (lock) {
+			return buffer.getWriteIndex() > buffer.getReadIndex();
+		}
 	}
 
 	public int remainingBytes() {
 
-		return buffer.getWriteIndex() - buffer.getReadIndex();
+		synchronized (lock) {
+			return buffer.getWriteIndex() - buffer.getReadIndex();
+		}
 	}
 
 
+	@GuardedBy("lock")
 	private void checkSize(int newAdd) throws IOException {
 
 		if (!keepBuffer) {
@@ -121,54 +142,48 @@ public class DataBuffer {
 		InternalDataBuffer aux = new FileDataBuffer((DynamicDataBuffer)buffer);
 		buffer.collect();
 		buffer = aux;
+		
 	}
 
-	/**
-	 * Read bytes from the buffer into a byte array.
-	 * 
-	 * This attempts to read count bytes from the buffer into bytes, starting at offset on bytes.
-	 * The bytes read start from the current readIndex of the buffer. 
-	 * 
-	 * @param bytes
-	 * @param offset
-	 * @param count
-	 * @throws IOException
-	 */
-	public void get(byte[] bytes, int offset, int count) throws IOException {
-
-		checkSize(count);
-
-		int oldWriteIndex = buffer.getWriteIndex();
-		buffer.read(count);
-		buffer.get(oldWriteIndex, bytes, offset, count);
+	public byte[] read() throws IOException {
+		
+		synchronized (lock) {
+			byte[] bytes = new byte[remainingBytes()];
+			buffer.get(buffer.getReadIndex(), bytes, 0, bytes.length);
+			return bytes;
+		}
 	}
 
 	public byte get() throws IOException {
 
-		checkSize(1);
-
-		byte[] ret = new byte[1];
-		int oldWriteIndex = buffer.getWriteIndex();
-
-		buffer.read(1);
-		buffer.get(oldWriteIndex, ret, 0, 1);
-
-		return ret[0];
+		synchronized (lock) {
+			checkSize(1);
+	
+			byte[] ret = new byte[1];
+			int oldWriteIndex = buffer.getWriteIndex();
+	
+			buffer.read(1);
+			buffer.get(oldWriteIndex, ret, 0, 1);
+	
+			return ret[0];
+		}
 	}
 
 
 	public void consume(int count) throws IOException {
 
-		checkSize(count);
-
-		buffer.read(count);
+		synchronized (lock) {
+			checkSize(count);
+			buffer.read(count);
+		}
 	}
 
 	public void consume() throws IOException {
 
-		checkSize(1);
-
-		buffer.read(1);
+		synchronized (lock) {
+			checkSize(1);
+			buffer.read(1);
+		}
 	}
 
 
@@ -176,14 +191,19 @@ public class DataBuffer {
 
 	public void retain() {
 
-		references++;
+		synchronized (lock) {
+			references++;
+		}
 	}
 
 	public void release() {
 
-		if (--references == 0) {
-			buffer.collect();
+		synchronized (lock) {
+			if (--references == 0) {
+				buffer.collect();
+			}
 		}
+		
 	}
 
 	@Override

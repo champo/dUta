@@ -2,8 +2,12 @@ package ar.edu.itba.pdc.duta.admin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ar.edu.itba.pdc.duta.admin.endpoint.Endpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.config.AddFilterEndpoint;
+import ar.edu.itba.pdc.duta.admin.endpoint.config.DeleteFilterEndpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.stats.BytesEndpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.stats.ChannelsEndpoint;
 import ar.edu.itba.pdc.duta.admin.endpoint.stats.ClientBytesEndpoint;
@@ -28,7 +32,9 @@ import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 public class AdminFilter implements Filter {
 	
-	private static final Map<String, Endpoint> endpoints = new HashMap<String, Endpoint>();
+	private final Endpoint deleteEndpoint = new DeleteFilterEndpoint();
+	
+	private final Map<String, Endpoint> endpoints = new HashMap<String, Endpoint>();
 	{
 		endpoints.put("/stats/bytes", new BytesEndpoint());
 		endpoints.put("/stats/bytes/clients", new ClientBytesEndpoint());
@@ -43,6 +49,7 @@ public class AdminFilter implements Filter {
 		endpoints.put("/stats/filters/deny-size", new DenySizeEndpoint());
 		endpoints.put("/stats/filters/l33t", new L33tEndpoint());
 		endpoints.put("/stats/filters/rotate", new RotateEndpoint());
+		endpoints.put("/filters", new AddFilterEndpoint());
 	}
 
 	@Override
@@ -70,11 +77,38 @@ public class AdminFilter implements Filter {
 			String uri = header.getRequestURI().toLowerCase();
 			Endpoint endpoint = endpoints.get(uri);
 			if (endpoint == null) {
-				return MessageFactory.build404();
-			} else {
-				//TODO: Check Accept headers and if there's a body, 400 out if so
-				return endpoint.process(msg);
+				
+				if (uri.startsWith("/filters/")) {
+					endpoint = deleteEndpoint;
+				} else {
+					return MessageFactory.build404();
+				}
 			}
+
+			if (!hasAuth(header.getField("Authorization"))) {
+				Message res = MessageFactory.build(401, "Authentication Required", "");
+				res.getHeader().setField("WWW-Authenticate", "Basic realm=\"dUta Admin\"");
+				
+				return res;
+			}
+		
+			return endpoint.process(msg);
+		}
+
+		private boolean hasAuth(String auth) {
+			
+			if (auth == null) {
+				return false;
+			}
+			
+			Matcher matcher = Pattern.compile("Basic[ \\t]+(.+)").matcher(auth);
+			
+			if (!matcher.matches()) {
+				return false;
+			}
+			
+			String digest = matcher.group(1);
+			return "aGVtYW46bWFzdGVyb2Z1bml2ZXJzZQ==".equals(digest);
 		}
 		
 	}

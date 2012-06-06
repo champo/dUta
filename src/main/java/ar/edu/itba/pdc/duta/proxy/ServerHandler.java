@@ -10,24 +10,24 @@ import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
 import ar.edu.itba.pdc.duta.http.parser.MessageParser;
 import ar.edu.itba.pdc.duta.http.parser.ResponseParser;
-import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
-public class ServerHandler extends AbstractChannelHandler implements OutputChannel {
+public class ServerHandler extends AbstractChannelHandler {
 
 	private static Logger logger = Logger.getLogger(ServerHandler.class);
 
 	private InetSocketAddress address;
-
-	private Operation currentOperation;
+	
+	protected Operation currentOperation;
 
 	public ServerHandler(InetSocketAddress address) {
 		this.address = address;
 	}
 
-	public void setCurrentOperation(Operation op) {
+	public void attachTo(Operation op, Object lock) {
 		this.currentOperation = op;
+		this.lock = lock;
 	}
 
 	public InetSocketAddress getAddress() {
@@ -36,7 +36,6 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 
 	@Override
 	public void close() {
-
 		Server.getConnectionPool().remove(this);
 		Stats.closeOutbound();
 
@@ -45,12 +44,17 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 
 	@Override
 	public void abort() {
-
+		
 		super.abort();
 
 		logger.debug("Got closed, removing myself from the world!");
 		if (currentOperation != null) {
 			currentOperation.close();
+			currentOperation = null;
+		}
+
+		if (buffer != null) {
+			buffer.release();
 			buffer = null;
 		}
 
@@ -58,7 +62,7 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 	}
 
 	@Override
-	public void wroteBytes(long bytes) {
+	protected void wroteBytes(long bytes) {
 		Stats.addServerTraffic(bytes);
 	}
 
@@ -83,17 +87,21 @@ public class ServerHandler extends AbstractChannelHandler implements OutputChann
 	}
 	
 	public void operationComplete() {
-		currentOperation = null;
 		
+		currentOperation = null;
+
 		if (buffer != null) {
 			buffer.release();
 			buffer = null;
 		}
+
+		lock = new Object();
 	}
 
 	@Override
 	protected MessageParser newParser() {
 		return new ResponseParser();
 	}
+
 
 }

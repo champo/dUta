@@ -44,7 +44,7 @@ public class Filters {
 
 		ret.add(httpFilter);
 
-		if (channel.socket().getLocalPort() == Server.ADMIN_PORT) {
+		if (channel.socket().getLocalPort() == Server.adminPort) {
 
 			ret.add(adminFilter);
 			return ret;
@@ -52,16 +52,19 @@ public class Filters {
 
 		Set<Integer> matchingFilters = new HashSet<Integer>();
 
-		BlockingQueue<Integer> browserList = filterMultimap.get(Browser.parseUserAgentString(header.getField("User-Agent")));
-		if (browserList != null) {
-			matchingFilters.addAll(browserList);
+		String ua = header.getField("User-Agent");
+		if (ua != null) { 
+			BlockingQueue<Integer> browserList = filterMultimap.get(Browser.parseUserAgentString(ua));
+			if (browserList != null) {
+				matchingFilters.addAll(browserList);
+			}
+			
+			BlockingQueue<Integer> osList = filterMultimap.get(OperatingSystem.parseUserAgentString(ua));
+			if (osList != null) {
+				matchingFilters.addAll(osList);
+			}
 		}
-		
-		BlockingQueue<Integer> osList = filterMultimap.get(OperatingSystem.parseUserAgentString(header.getField("User-Agent")));
-		if (osList != null) {
-			matchingFilters.addAll(osList);
-		}
-		
+
 		BlockingQueue<Integer> ipList = filterMultimap.get(channel.socket().getLocalAddress().getHostAddress());
 		if (ipList != null) {
 			matchingFilters.addAll(ipList);
@@ -103,19 +106,18 @@ public class Filters {
 	}
 
 
-	public void removeFilter(int id) {
+	public boolean removeFilter(int id) {
 
-		Set<Object> matches = filterMatches.put(id, null);
+		Set<Object> matches = filterMatches.remove(id);
 
 		if (matches == null) {
-			return;
+			return false;
 		}
 
 		for (Object match : matches) {
-
 			filterMultimap.get(match).remove(id);
 		}
 
-		filterIds.remove(id);
+		return filterIds.remove(id) != null;
 	}
 }

@@ -1,6 +1,7 @@
 package ar.edu.itba.pdc.duta.net;
 
 import java.io.IOException;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -17,13 +18,13 @@ import ar.edu.itba.pdc.duta.admin.Stats;
 public class Reactor implements Runnable {
 
 	private static Logger logger = Logger.getLogger(Reactor.class);
-	
+
 	private Selector selector;
-	
+
 	private Object guard;
-	
+
 	private boolean run;
-	
+
 	public Reactor() throws IOException {
 		selector = Selector.open();
 		guard = new Object();
@@ -33,21 +34,24 @@ public class Reactor implements Runnable {
 
 		synchronized (guard) {
 			selector.wakeup();
-			
-			socket.configureBlocking(false);
-			int ops = SelectionKey.OP_READ;
-			if (!socket.isConnected()) {
-				ops = SelectionKey.OP_CONNECT;
+
+			synchronized (handler.keyLock()) {
+
+				socket.configureBlocking(false);
+				int ops = SelectionKey.OP_READ;
+				if (!socket.isConnected()) {
+					ops = SelectionKey.OP_CONNECT;
+				}
+
+				SelectionKey key = socket.register(selector, ops, handler);
+                handler.setKey(new ReactorKey(key), new BufferedReadableByteChannel(socket));
 			}
-			
-			SelectionKey key = socket.register(selector, ops, handler);
-			handler.setKey(new ReactorKey(key), new BufferedReadableByteChannel(socket));
 		}
 	}
-	
+
 	@Override
 	public void run() {
-		
+
 		run = true;
 		while (run) {
 			try {
@@ -56,12 +60,12 @@ public class Reactor implements Runnable {
 					Stats.log();
 				}
 				selector.select();
-				
+
 				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
 				while (keys.hasNext()) {
 					SelectionKey key = keys.next();
 					keys.remove();
-					
+
 					handleInterest(key);
 				}
 
@@ -74,63 +78,68 @@ public class Reactor implements Runnable {
 	private void handleInterest(SelectionKey key) {
 		SocketChannel channel = (SocketChannel) key.channel();
 		ChannelHandler handler = (ChannelHandler) key.attachment();
-		
-		try {
-			
-			if (key.isValid() && key.isConnectable()) {
-				channel.finishConnect();
-				handler.getKey().setCachedOps();
-				return;
-			}
 
-			if (key.isValid() && key.isReadable()) {
-				handler.read(channel);
-			}
+		synchronized (handler.lock()) {
 
-			if (key.isValid() && key.isWritable()) {
-				handler.write(channel);
-			}
-
-			if (!key.isValid()) {
-				channel.close();
-
-				// Remove the link between handler and key
-				key.attach(null);
-			}
-			
-		} catch (Exception e) {
-			logger.warn("Closing socket due to catched exception", e);
-			
-			handler.close();
-			key.attach(null);
-			
 			try {
-				channel.close();
-			} catch (IOException t) {
-				logger.error("Failed to close channel after force close due to catching an Exception", t);
+
+				if (key.isValid() && key.isConnectable()) {
+					channel.finishConnect();
+					handler.getKey().setCachedOps();
+					return;
+				}
+
+				if (key.isValid() && key.isReadable()) {
+					handler.read(channel);
+				}
+
+				if (key.isValid() && key.isWritable()) {
+					handler.write(channel);
+				}
+
+				if (!key.isValid()) {
+					channel.close();
+
+					// Remove the link between handler and key
+					key.attach(null);
+				}
+
+			} catch (CancelledKeyException e) {
+				logger.warn("Got cancelled key", e);
+			} catch (Exception e) {
+				logger.warn("Closing socket due to catched exception", e);
+
+				handler.close();
+				key.attach(null);
+
+				try {
+					channel.close();
+				} catch (IOException t) {
+					logger.error("Failed to close channel after force close due to catching an Exception", t);
+				}
+
+				key.cancel();
 			}
-			
-			key.cancel();
 		}
 	}
-	
+
 	public void stop() {
 		run = false;
 		selector.wakeup();
 	}
-	
+
 	@ThreadSafe
 	public class ReactorKey {
-		
+
 		private SelectionKey key;
-		
+
 		private int ops;
-		
+
 		private ReactorKey(SelectionKey key) {
 			this.key = key;
 		}
-		
-		public synchronized void setInterest(boolean read, boolean write) {
+
+		public void setInterest(boolean read, boolean write) {
 
 			ops = 0;
 
@@ -148,29 +157,39 @@ public class Reactor implements Runnable {
 				selector.wakeup();
 			}
 		}
-		
+
 		/**
 		 * Set the ops stored from the Handler.
 		 *
 		 * The Reactor may ignore the ops request by the handler.
 		 * In that case, those ops are stored and re set after by calling this method.
 		 */
-		protected synchronized void setCachedOps() {
-			
+		protected void setCachedOps() {
+
 			key.interestOps(ops);
 			selector.wakeup();
 		}
 
-		public synchronized void close() {
-			
-			key.cancel();
+		private void cancel() {
+
+			synchronized (guard) {
+				selector.wakeup();
+				key.cancel();
+			}
+		}
+
+		public void close() {
+
+			cancel();
+
 			try {
 				key.channel().close();
 			} catch (IOException e) {
 				logger.warn("Caught exception closing a channel.", e);
 			}
-			
-			selector.wakeup();
+
 		}
+
 	}
+
 }

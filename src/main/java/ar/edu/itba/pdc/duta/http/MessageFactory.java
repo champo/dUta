@@ -23,26 +23,37 @@ public final class MessageFactory {
 	}
 	
 	public static Message build(int code, String reason, String body) {
+		return build(code, reason, body, "text/plain");
+	}
+	
+	public static Message build(int code, String reason, String body, String contentType) {
 		
 		byte[] bytes;
-		try {
-			bytes = body.getBytes("UTF8");
-		} catch (UnsupportedEncodingException e) {
-			// This shouldnt happen.
-			return build500();
-		}
-		
 		Map<String, String> fields = new HashMap<String, String>();
 		
 		fields.put("Via", "dUta");
-		fields.put("Content-Length", String.valueOf(bytes.length));
-		fields.put("Content-Type", "text/plain; encoding=UTF-8");
+		
+		if (body != null) {
+			
+			try {
+				bytes = body.getBytes("UTF8");
+			} catch (UnsupportedEncodingException e) {
+				// This shouldnt happen.
+				return build500();
+			}
+			
+			fields.put("Content-Length", String.valueOf(bytes.length));
+			fields.put("Content-Type", contentType + "; encoding=UTF-8");
+		} else {
+			bytes = new byte[0];
+		}
 		
 		MessageHeader header = new ResponseHeader(Grammar.HTTP11, code, reason, fields);
 		Message message = new Message(header);
 		
-		message.setBody(new DataBuffer(bytes));
-		//FIXME: Release the data buffer!
+		DataBuffer buffer = new DataBuffer(bytes);
+		message.setBody(buffer);
+		buffer.release();
 		
 		return message;
 	}

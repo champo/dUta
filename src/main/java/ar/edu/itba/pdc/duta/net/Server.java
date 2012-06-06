@@ -23,7 +23,7 @@ import ar.edu.itba.pdc.duta.proxy.filter.Filters;
 @ThreadSafe
 public class Server {
 	
-	public static final int ADMIN_PORT = 1337;
+	public static int adminPort = 1337;
 
 	public static final Logger logger = Logger.getLogger(Server.class);
 
@@ -35,11 +35,18 @@ public class Server {
 
 	private Filters filters;
 
+	private InetSocketAddress connectTo;
 
-	private Server() {
+	private int port;
+
+	private Server(int port, int adminPort, InetSocketAddress connectTo) {
 		super();
 		resolver = new ConnectionPool();
 		filters = new Filters();
+
+		Server.adminPort = adminPort;
+		this.port = port;
+		this.connectTo = connectTo;
 	}
 
 	public void start() {
@@ -53,11 +60,9 @@ public class Server {
 		}
 		
 		try {
-			int port = 9999;
-
 			Selector selector = Selector.open();
 			listen(port, selector);
-			listen(ADMIN_PORT, selector);
+			listen(adminPort, selector);
 			
 			logger.info("Starting server on port: " + port);
 			
@@ -69,7 +74,15 @@ public class Server {
 						keys.remove();
 
 						ServerSocketChannel channel = (ServerSocketChannel) key.channel();
-						SocketChannel socket = channel.accept();
+						
+						SocketChannel socket;
+						try {
+							socket = channel.accept();
+						} catch (Exception e) {
+							logger.fatal("Failed to accept incoming", e);
+							continue;
+						}
+						
 						if (socket != null) {
 							
 							Stats.newInbound();
@@ -110,6 +123,7 @@ public class Server {
 	
 	private void runReactors() throws IOException {
 		int threads = 2 * Runtime.getRuntime().availableProcessors();
+		//int threads = 2;
 		reactorPool = new ReactorPool(threads);
 		reactorPool.start();
 	}
@@ -119,12 +133,79 @@ public class Server {
 	}
 	
 	public static void main(String[] args) throws IOException {
-		Server.run();
+		
+		InetSocketAddress connectTo = null;
+		int port = 9999;
+		int adminPort = 1337;
+		
+		for (int i = 0; i < args.length; i++) {
+			String arg = args[i];
+			if (arg.startsWith("--chain=")) {
+				
+				String chain = arg.substring(arg.indexOf('=') + 1);
+				String[] split = chain.split(":");
+				
+				if (split.length != 2) {
+					System.out.println("'" + chain + "' is not a valid address");
+					usage();
+					return;
+				}
+				
+				try {
+					connectTo = new InetSocketAddress(split[0], Integer.parseInt(split[1]));
+				} catch (Exception e) {
+					System.out.println("'" + chain + "' is not a valid address");
+					usage();
+					return;
+				}
+				
+			} else if (arg.startsWith("--port=")) {
+				
+				String portString = arg.substring(arg.indexOf('=') + 1);
+				
+				try {
+					port = Integer.parseInt(portString);
+				} catch (NumberFormatException e) {
+					System.out.println("'" + portString + "' is not a valid port number");
+					usage();
+					return;
+				}
+				
+			} else if (arg.startsWith("--admin-port=")) {
+
+				String portString = arg.substring(arg.indexOf('=') + 1);
+				
+				try {
+					adminPort = Integer.parseInt(portString);
+				} catch (NumberFormatException e) {
+					System.out.println("'" + portString + "' is not a valid port number");
+					usage();
+					return;
+				}
+
+			}
+			
+		}
+		
+		System.out.println("Listen port: " + port);
+		System.out.println("Admin port: " + adminPort);
+		if (connectTo != null) {
+			System.out.println("Chaining to: " + connectTo);
+		}
+		
+		Server.run(port, adminPort, connectTo);
 		System.exit(0);
 	}
 
-	private static void run() {
-		instance = new Server();
+	private static void usage() {
+		System.out.println("Options:");
+		System.out.println("\t--chain=ip:port    Chain to another proxy");
+		System.out.println("\t--port=port        Listen for requests on `port`");
+		System.out.println("\t--admin-port=port  Listen for admin requests on `port`");
+	}
+
+	private static void run(int port, int adminPort, InetSocketAddress connectTo) {
+		instance = new Server(port, adminPort, connectTo);
 		instance.start();
 	}
 	
@@ -139,7 +220,7 @@ public class Server {
 		socket.socket().setTcpNoDelay(true);
 		socket.connect(remote);
 		
-		registerChannel(socket, handler);
+		instance.getReactor().addChannel(socket, handler);
 	}
 	
 	public static ConnectionPool getConnectionPool() {
@@ -149,4 +230,9 @@ public class Server {
 	public static Filters getFilters() {
 		return instance.filters;
 	}
+	
+	public static InetSocketAddress getChainAddress() {
+		return instance.connectTo;
+	}
+
 }

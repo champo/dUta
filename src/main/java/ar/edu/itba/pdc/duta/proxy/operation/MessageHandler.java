@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
 import ar.edu.itba.pdc.duta.http.model.Message;
@@ -37,6 +38,8 @@ public class MessageHandler {
 	
 	private boolean wroteHeader = false;
 	
+	private boolean mayTransform = false;
+	
 	public MessageHandler(MessageHeader header, List<OperationFilter> filters, OutputChannel outputChannel, boolean hasBody) {
 		this(header, filters, outputChannel);
 		this.hasBody = hasBody;
@@ -51,6 +54,7 @@ public class MessageHandler {
 
 		for (OperationFilter filter : filters) {
 			logger.debug("Filter " + filter.part);
+			mayTransform |= filter.interest.full();
 			if (filter.interest.bytesRecieved() || filter.interest.full()) {
 				needsBody = true;
 			}
@@ -69,6 +73,10 @@ public class MessageHandler {
 					return result;
 				}
 			}
+		}
+		
+		if (mayTransform) {
+			msg.getHeader().removeField("Accept-Encoding");
 		}
 
 		if (!createParser()) {
@@ -158,13 +166,24 @@ public class MessageHandler {
 	}
 
 	private void checkCompletion() {
+		if (complete) {
+			return;
+		}
+		
 		complete = parser.isComplete();
 	}
 
-	public Message append(Operation op) {
-		
+	public Message append(Operation op, boolean client) {
+	
 		try {
-			size += parser.parse();
+			int bytes = parser.parse(); 
+			size += bytes;
+
+			if (client) {
+				Stats.addClientTraffic(bytes);
+			} else {
+				Stats.addServerTraffic(bytes);
+			}
 		} catch (IOException e) {
 			logger.warn("Failed while parsing a message body", e);
 			return MessageFactory.build500();

@@ -2,6 +2,8 @@ package ar.edu.itba.pdc.duta.proxy.operation;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,10 +78,11 @@ public class Operation {
 
 		Message res = clientMessageHandler.processHeader(this);
 		if (res != null) {
+			closeClient = true;
 			writeMessage(res);
 			return null;
 		}
-
+		
 		return clientMessageHandler.getBuffer();
 	}
 
@@ -110,8 +113,31 @@ public class Operation {
 	}
 
 	private InetSocketAddress extractAddress(RequestHeader header) {
+		
+		if (Server.getChainAddress() != null) {
+			return Server.getChainAddress();
+		}
+		
+		try {
+			URL url = new URL(header.getRequestURI());
+			if (header.getField("Host") == null) {
+				header.setField("Host", url.getHost());
+			} 
+
+			String file = url.getFile();
+			if (file.isEmpty()) {
+				header.setRequestURI("/");
+			} else {
+				header.setRequestURI(file);
+			}
+		} catch (MalformedURLException e) {
+			// This is cool, I think
+		}
 
 		String host = header.getField("Host");
+		if (host == null) {
+			return null;
+		}
 
 		if (host.contains(":")) {
 			String[] split = host.split(":");
@@ -133,7 +159,7 @@ public class Operation {
 		if (serverProxy != null && serverProxy.getChannel() != null) {
 			ServerHandler handler = serverProxy.getChannel();
 
-			handler.setCurrentOperation(null);
+			handler.attachTo(null, new Object());
 			handler.close();
 		}
 
@@ -179,19 +205,21 @@ public class Operation {
 		if (clientHandler != null) {
 
 			clientHandler.operationComplete();
+			
 			if (closeClient) {
 				clientHandler.close();
 			}
-
+			clientHandler = null;
+			
 		}
-		clientHandler = null;
 
 		closed = true;
 	}
 
 	public void addClientBody() {
-		Message res = clientMessageHandler.append(this);
+		Message res = clientMessageHandler.append(this, true);
 		if (res != null) {
+			closeClient = true;
 			writeMessage(res);
 		}
 	}
@@ -228,7 +256,7 @@ public class Operation {
 
 	public void addServerBody() {
 
-		Message res = serverMessageHandler.append(this);
+		Message res = serverMessageHandler.append(this, false);
 		if (res != null) {
 			writeMessage(res);
 		} else if (serverMessageHandler.isMessageComplete()) {
@@ -237,8 +265,16 @@ public class Operation {
 	}
 
 	public ChannelProxy getServerProxy() {
-
 		return serverProxy;
+	}
+
+	public Object getLock() {
+		
+		if (clientHandler == null) {
+			throw new IllegalStateException("No client handler in getLock");
+		}
+		
+		return clientHandler.lock();
 	}
 
 }

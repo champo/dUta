@@ -12,12 +12,12 @@ import java.util.NoSuchElementException;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageWriter;
-import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 
 import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.MessageFactory;
+import ar.edu.itba.pdc.duta.http.model.MediaType;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -57,7 +57,7 @@ public class ImageRotationFilter implements Filter {
 
 			contentType = MediaType.valueOf(header.getField("Content-Type")); 
 
-			if (contentType.isCompatible(MediaType.valueOf("image/*"))) {
+			if (MediaType.valueOf("image/*").isCompatible(contentType)) {
 
 				isImage = true;
 			}
@@ -68,11 +68,9 @@ public class ImageRotationFilter implements Filter {
 		@Override
 		public Message filter(Operation op, Message msg) {
 
-			byte[] bytes = new byte[msg.getCurrentBodySize()];
-
 			try {
 
-				msg.getBody().get(bytes, 0, msg.getCurrentBodySize());
+				byte[] bytes = msg.getBody().read();
 
 		        Iterator<ImageReader> readers = ImageIO.getImageReadersByMIMEType(contentType.toString());
 		        ImageReader reader = readers.next();
@@ -94,17 +92,19 @@ public class ImageRotationFilter implements Filter {
 				bytes = baos.toByteArray();
 				baos.close();
 
-				msg.setBody(new DataBuffer(bytes));
+				DataBuffer putita = new DataBuffer(bytes); 
+				msg.setBody(putita);
+				msg.getHeader().setField("Content-Length", "" + putita.getWriteIndex());
 
 			} catch (IOException e) {
 
-				logger.error("Failed to read/write image", e);
-				return MessageFactory.build500();
+				logger.warn("Failed to read/write image", e);
+				msg.getBody().setReadIndex(0);
 
 			}  catch (NoSuchElementException e) {
 
-				logger.error("Invalid image type", e);
-				return MessageFactory.build500();
+				logger.warn("Invalid image type", e);
+				msg.getBody().setReadIndex(0);
 			}
 
 			return null;

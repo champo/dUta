@@ -5,6 +5,7 @@ import java.nio.channels.SocketChannel;
 import java.util.Deque;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
@@ -22,13 +23,16 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	private static Logger logger = Logger.getLogger(AbstractChannelHandler.class);
 
+	@GuardedBy("keyLock")
 	protected ReactorKey key;
 
-	private Deque<DataBuffer> outputQueue;
+	private Deque<DataBuffer> outputQueue = new LinkedBlockingDeque<DataBuffer>();
 
 	protected boolean close = false;
 
-	protected Object keyLock;
+	protected Object keyLock = new Object();
+
+	protected Object lock = new Object();
 
 	private MessageParser parser;
 
@@ -37,14 +41,14 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	private BufferedReadableByteChannel channel;
 
 	public AbstractChannelHandler() {
-
-		outputQueue = new LinkedBlockingDeque<DataBuffer>();
-		key = null;
-		keyLock = new Object();
 	}
 
 	@Override
 	public void queueOutput(DataBuffer output) {
+
+		if (close) {
+			throw new IllegalStateException();
+		}
 
 		synchronized (outputQueue) {
 			if (outputQueue.peekLast() != output) {
@@ -60,7 +64,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		}
 	}
 
-	public abstract void wroteBytes(long bytes);
+	protected abstract void wroteBytes(long bytes);
 
 	@Override
 	public void write(SocketChannel channel) throws IOException {
@@ -77,11 +81,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			} catch (IOException e) {
 
 				logger.warn("Writing to socket failed.", e);
-
-				// This should mean the pipe was broken. We bail in that case.
-				synchronized (keyLock) {
-					key.close();
-				}
+				abort();
 				return;
 			}
 
@@ -107,10 +107,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		}
 	}
 
-	public boolean hasOutputQueued() {
-		return !outputQueue.isEmpty();
-	}
-
+	@Override
 	public ReactorKey getKey() {
 		return key;
 	}
@@ -118,24 +115,21 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	@Override
 	public void setKey(ReactorKey key, BufferedReadableByteChannel channel) {
 
-		synchronized (keyLock) {
-			this.key = key;
-			if (key != null) {
-				key.setInterest(true, !outputQueue.isEmpty());
-			}
+		this.key = key;
+		if (key != null) {
+			key.setInterest(true, !outputQueue.isEmpty());
 		}
 
 		this.channel = channel;
 	}
 
 	public void close() {
+
 		close = true;
 
 		synchronized (keyLock) {
 
 			if (key != null && !outputQueue.isEmpty()) {
-				// FIXME: Somehow, the correct value for the interest is lost
-				// sometimes
 				key.setInterest(true, true);
 			}
 
@@ -168,7 +162,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		int pos = buffer.getWriteIndex();
 
 		try {
-			parser.parse(buffer);
+			parser.parse(buffer, this instanceof ClientHandler);
 		} catch (ParseException e) {
 			logger.error("Aborting request due to malformed headers", e);
 			abort();
@@ -188,10 +182,10 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			logger.debug("Have full header...");
 			logger.debug(header);
 
-			parser = null;
-
 			buffer.release();
 			buffer = null;
+
+			parser = null;
 
 			processHeader(header, channel);
 		}
@@ -199,21 +193,34 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 
 	@Override
 	public void abort() {
+
 		if (buffer != null) {
 			buffer.release();
 			buffer = null;
 		}
-		
+
 		for (DataBuffer buffer : outputQueue) {
 			buffer.release();
 		}
-		
+
 		outputQueue.clear();
 	}
-	
+
+	@Override
+	public Object keyLock() {
+		return keyLock;
+	}
+
+	@Override
+	public Object lock() {
+		return lock;
+	}
+
 	protected abstract MessageParser newParser();
 
 	protected abstract void processHeader(MessageHeader header, SocketChannel channel);
 
 	protected abstract void processBody();
+
+
 }

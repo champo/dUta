@@ -49,7 +49,7 @@ public class URIFilter implements Filter {
 
 			String url = op.getServerProxy().getAddress().getHostName() + ((RequestHeader) header).getRequestURI();
 
-			if (pattern.matcher(url).matches()) {
+			if (pattern.matcher(url).find()) {
 
 				return MessageFactory.build404();
 			}

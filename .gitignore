@@ -12,3 +12,7 @@ target
 .project
 .classpath
 .settings
+
+# Ignore log files
+*.log
+

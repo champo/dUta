@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.text.WordUtils;
 
+import ar.edu.itba.pdc.duta.admin.Stats;
 import ar.edu.itba.pdc.duta.http.Grammar;
 import ar.edu.itba.pdc.duta.http.model.MessageHeader;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
@@ -35,7 +36,7 @@ public abstract class MessageParser {
 		this.fields = new HashMap<String, StringBuilder>();
 	}
 
-	public boolean parse(DataBuffer buffer) throws ParseException, IOException {
+	public boolean parse(DataBuffer buffer, boolean client) throws ParseException, IOException {
 		
 		char oldc;
 		char c = '\0';
@@ -47,6 +48,12 @@ public abstract class MessageParser {
 
 			if (pos >= buffer.getWriteIndex()) {
 				break;
+			} else {
+				if (client) {
+					Stats.addClientTraffic(1);
+				} else {
+					Stats.addServerTraffic(1);
+				}
 			}
 
 			oldc = c;
