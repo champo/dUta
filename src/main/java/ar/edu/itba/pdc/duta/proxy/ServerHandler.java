@@ -25,8 +25,9 @@ public class ServerHandler extends AbstractChannelHandler {
 		this.address = address;
 	}
 
-	public void setCurrentOperation(Operation op) {
+	public void attachTo(Operation op, Object lock) {
 		this.currentOperation = op;
+		this.lock = lock;
 	}
 
 	public InetSocketAddress getAddress() {
@@ -35,7 +36,6 @@ public class ServerHandler extends AbstractChannelHandler {
 
 	@Override
 	public void close() {
-
 		Server.getConnectionPool().remove(this);
 		Stats.closeOutbound();
 
@@ -44,12 +44,17 @@ public class ServerHandler extends AbstractChannelHandler {
 
 	@Override
 	public void abort() {
-
+		
 		super.abort();
 
 		logger.debug("Got closed, removing myself from the world!");
 		if (currentOperation != null) {
 			currentOperation.close();
+			currentOperation = null;
+		}
+
+		if (buffer != null) {
+			buffer.release();
 			buffer = null;
 		}
 
@@ -57,7 +62,7 @@ public class ServerHandler extends AbstractChannelHandler {
 	}
 
 	@Override
-	public void wroteBytes(long bytes) {
+	protected void wroteBytes(long bytes) {
 		Stats.addServerTraffic(bytes);
 	}
 
@@ -82,12 +87,15 @@ public class ServerHandler extends AbstractChannelHandler {
 	}
 	
 	public void operationComplete() {
-		currentOperation = null;
 		
+		currentOperation = null;
+
 		if (buffer != null) {
 			buffer.release();
 			buffer = null;
 		}
+
+		lock = new Object();
 	}
 
 	@Override
@@ -95,9 +103,5 @@ public class ServerHandler extends AbstractChannelHandler {
 		return new ResponseParser();
 	}
 
-	@Override
-	protected boolean canWrite(Operation op) {
-		return currentOperation == op;
-	}
 
 }

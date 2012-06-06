@@ -33,7 +33,7 @@ public class ChannelProxy implements OutputChannel {
 		}
 
 		logger.debug("Queueing output: " + buff);
-		channel.queueOutput(buff, op);
+		channel.queueOutput(buff);
 	}
 
 	private void openChannel() {
@@ -43,7 +43,7 @@ public class ChannelProxy implements OutputChannel {
 		if (channel == null) {
 			throw new RuntimeException("Failed to resolve");
 		} else {
-			channel.setCurrentOperation(op);
+			channel.attachTo(op, op.getLock());
 		}
 	}
 

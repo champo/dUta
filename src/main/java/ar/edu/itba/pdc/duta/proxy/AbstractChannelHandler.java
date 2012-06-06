@@ -16,7 +16,6 @@ import ar.edu.itba.pdc.duta.http.parser.ParseException;
 import ar.edu.itba.pdc.duta.net.ChannelHandler;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
-import ar.edu.itba.pdc.duta.proxy.operation.Operation;
 
 @ThreadSafe
 public abstract class AbstractChannelHandler implements ChannelHandler {
@@ -26,49 +25,46 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 	@GuardedBy("keyLock")
 	protected ReactorKey key;
 
-	private Deque<DataBuffer> outputQueue;
+	private Deque<DataBuffer> outputQueue = new LinkedBlockingDeque<DataBuffer>();
 
 	protected boolean close = false;
 
-	protected Object keyLock;
+	protected Object keyLock = new Object();
+	
+	protected Object lock = new Object();
 
 	private MessageParser parser;
 
 	protected DataBuffer buffer;
 
 	public AbstractChannelHandler() {
-		outputQueue = new LinkedBlockingDeque<DataBuffer>();
-		key = null;
-		keyLock = new Object();
 	}
 
-	public synchronized void queueOutput(DataBuffer output, Operation op) {
+	@Override
+	public void queueOutput(DataBuffer output) {
+
+		if (close) {
+			throw new IllegalStateException();
+		}
+
+		synchronized (outputQueue) {
+			if (outputQueue.peekLast() != output) {
+				outputQueue.addLast(output);
+				output.retain();
+			}
+		}
 
 		synchronized (keyLock) {
-			
-			if (close || !canWrite(op)) {
-				throw new IllegalStateException();
-			}
-			
-			synchronized (outputQueue) {
-				if (outputQueue.peekLast() != output) {
-					outputQueue.addLast(output);
-					output.retain();
-				}
-			}
-
 			if (key != null) {
 				key.setInterest(true, true);
 			}
 		}
 	}
 
-	protected abstract boolean canWrite(Operation op);
-	
-	public abstract void wroteBytes(long bytes);
+	protected abstract void wroteBytes(long bytes);
 
 	@Override
-	public synchronized void write(SocketChannel channel) throws IOException {
+	public void write(SocketChannel channel) throws IOException {
 
 		while (!outputQueue.isEmpty()) {
 
@@ -108,10 +104,6 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		}
 	}
 
-	public boolean hasOutputQueued() {
-		return !outputQueue.isEmpty();
-	}
-
 	@Override
 	public ReactorKey getKey() {
 		return key;
@@ -125,7 +117,8 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		}
 	}
 
-	public synchronized void close() {
+	public void close() {
+
 		close = true;
 
 		synchronized (keyLock) {
@@ -148,7 +141,7 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			parser = newParser();
 			buffer = new DataBuffer();
 		}
-		
+
 		buffer.readFrom(channel);
 
 		if (parser != null) {
@@ -186,23 +179,24 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 			buffer.release();
 			buffer = null;
 
-			processHeader(header, channel);
-			
 			parser = null;
+
+			processHeader(header, channel);
 		}
 	}
 
 	@Override
 	public void abort() {
+
 		if (buffer != null) {
 			buffer.release();
 			buffer = null;
 		}
-		
+
 		for (DataBuffer buffer : outputQueue) {
 			buffer.release();
 		}
-		
+
 		outputQueue.clear();
 	}
 	
@@ -211,9 +205,16 @@ public abstract class AbstractChannelHandler implements ChannelHandler {
 		return keyLock;
 	}
 	
+	@Override
+	public Object lock() {
+		return lock;
+	}
+	
 	protected abstract MessageParser newParser();
 
 	protected abstract void processHeader(MessageHeader header, SocketChannel channel);
 
 	protected abstract void processBody();
+	
+	
 }

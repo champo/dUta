@@ -16,7 +16,6 @@ import ar.edu.itba.pdc.duta.http.model.Connection;
 import ar.edu.itba.pdc.duta.http.model.Message;
 import ar.edu.itba.pdc.duta.http.model.RequestHeader;
 import ar.edu.itba.pdc.duta.http.model.ResponseHeader;
-import ar.edu.itba.pdc.duta.net.OutputChannel;
 import ar.edu.itba.pdc.duta.net.Server;
 import ar.edu.itba.pdc.duta.net.buffer.DataBuffer;
 import ar.edu.itba.pdc.duta.proxy.ClientHandler;
@@ -50,7 +49,7 @@ public class Operation {
 		clientHandler = requestChannelHandler;
 	}
 
-	public synchronized DataBuffer setClientHeader(RequestHeader header, SocketChannel channel) {
+	public DataBuffer setClientHeader(RequestHeader header, SocketChannel channel) {
 
 		closeClient = Connection.checkStatus(header) == Connection.CLOSE;
 
@@ -87,7 +86,7 @@ public class Operation {
 		return clientMessageHandler.getBuffer();
 	}
 
-	private synchronized void writeMessage(Message res) {
+	private void writeMessage(Message res) {
 		
 		if (serverMessageHandler != null && serverMessageHandler.wroteHeader()) {
 			logger.warn("Wont write filter message since headers were written already");
@@ -99,7 +98,7 @@ public class Operation {
 
 		try {
 			DataBuffer buffer = new DataBuffer(res.getHeader().toString().getBytes("ascii"));
-			clientHandler.queueOutput(buffer, this);
+			clientHandler.queueOutput(buffer);
 			buffer.release();
 		} catch (UnsupportedEncodingException e) {
 			// If this happens, the world is screwed
@@ -109,7 +108,7 @@ public class Operation {
 			return;
 		}
 
-		clientHandler.queueOutput(res.getBody(), this);
+		clientHandler.queueOutput(res.getBody());
 		close();
 	}
 
@@ -155,12 +154,12 @@ public class Operation {
 		}
 	}
 
-	public synchronized void abort() {
+	public void abort() {
 
 		if (serverProxy != null && serverProxy.getChannel() != null) {
 			ServerHandler handler = serverProxy.getChannel();
 
-			handler.setCurrentOperation(null);
+			handler.attachTo(null, new Object());
 			handler.close();
 		}
 
@@ -181,7 +180,7 @@ public class Operation {
 		}
 	}
 
-	public synchronized void close() {
+	public void close() {
 
 		if (serverProxy != null && serverProxy.getChannel() != null) {
 			
@@ -217,7 +216,7 @@ public class Operation {
 		closed = true;
 	}
 
-	public synchronized void addClientBody() {
+	public void addClientBody() {
 		Message res = clientMessageHandler.append(this, true);
 		if (res != null) {
 			closeClient = true;
@@ -225,11 +224,11 @@ public class Operation {
 		}
 	}
 
-	public synchronized boolean isClientMessageComplete() {
+	public boolean isClientMessageComplete() {
 		return closed || clientMessageHandler.isMessageComplete();
 	}
 
-	public synchronized DataBuffer setServerHeader(ResponseHeader header) {
+	public DataBuffer setServerHeader(ResponseHeader header) {
 		closeServer = Connection.checkStatus(header) == Connection.CLOSE;
 		
 		if (!Grammar.HTTP11.equalsIgnoreCase(header.getHTTPVersion())) {
@@ -245,9 +244,7 @@ public class Operation {
 			}
 		}
 
-		OutputChannel clientProxy = new ClientProxy(this, clientHandler);
-		
-		serverMessageHandler = new MessageHandler(header, responseFilters, clientProxy, !isHead);
+		serverMessageHandler = new MessageHandler(header, responseFilters, clientHandler, !isHead);
 		Message res = serverMessageHandler.processHeader(this);
 		if (res != null) {
 			writeMessage(res);
@@ -257,7 +254,7 @@ public class Operation {
 		return serverMessageHandler.getBuffer();
 	}
 
-	public synchronized void addServerBody() {
+	public void addServerBody() {
 
 		Message res = serverMessageHandler.append(this, false);
 		if (res != null) {
@@ -268,8 +265,16 @@ public class Operation {
 	}
 
 	public ChannelProxy getServerProxy() {
-
 		return serverProxy;
+	}
+
+	public Object getLock() {
+		
+		if (clientHandler == null) {
+			throw new IllegalStateException("No client handler in getLock");
+		}
+		
+		return clientHandler.lock();
 	}
 
 }

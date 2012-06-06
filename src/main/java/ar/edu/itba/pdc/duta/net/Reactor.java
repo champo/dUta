@@ -79,44 +79,47 @@ public class Reactor implements Runnable {
 		SocketChannel channel = (SocketChannel) key.channel();
 		ChannelHandler handler = (ChannelHandler) key.attachment();
 		
-		try {
-			
-			if (key.isValid() && key.isConnectable()) {
-				channel.finishConnect();
-				handler.getKey().setCachedOps();
-				return;
-			}
-
-			if (key.isValid() && key.isReadable()) {
-				handler.read(channel);
-			}
-
-			if (key.isValid() && key.isWritable()) {
-				handler.write(channel);
-			}
-
-			if (!key.isValid()) {
-				channel.close();
-
-				// Remove the link between handler and key
-				key.attach(null);
-			}
-			
-		} catch (CancelledKeyException e) {
-			logger.warn("Got cancelled key", e);
-		} catch (Exception e) {
-			logger.warn("Closing socket due to catched exception", e);
-			
-			handler.close();
-			key.attach(null);
+		synchronized (handler.lock()) {
 			
 			try {
-				channel.close();
-			} catch (IOException t) {
-				logger.error("Failed to close channel after force close due to catching an Exception", t);
+				
+				if (key.isValid() && key.isConnectable()) {
+					channel.finishConnect();
+					handler.getKey().setCachedOps();
+					return;
+				}
+	
+				if (key.isValid() && key.isReadable()) {
+					handler.read(channel);
+				}
+	
+				if (key.isValid() && key.isWritable()) {
+					handler.write(channel);
+				}
+	
+				if (!key.isValid()) {
+					channel.close();
+	
+					// Remove the link between handler and key
+					key.attach(null);
+				}
+				
+			} catch (CancelledKeyException e) {
+				logger.warn("Got cancelled key", e);
+			} catch (Exception e) {
+				logger.warn("Closing socket due to catched exception", e);
+				
+				handler.close();
+				key.attach(null);
+				
+				try {
+					channel.close();
+				} catch (IOException t) {
+					logger.error("Failed to close channel after force close due to catching an Exception", t);
+				}
+				
+				key.cancel();
 			}
-			
-			key.cancel();
 		}
 	}
 	

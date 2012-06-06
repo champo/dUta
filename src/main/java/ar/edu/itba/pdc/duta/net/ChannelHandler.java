@@ -6,7 +6,7 @@ import java.nio.channels.SocketChannel;
 import net.jcip.annotations.GuardedBy;
 import ar.edu.itba.pdc.duta.net.Reactor.ReactorKey;
 
-public interface ChannelHandler {
+public interface ChannelHandler extends OutputChannel {
 
 	public void read(SocketChannel channel) throws IOException;
 
@@ -23,5 +23,7 @@ public interface ChannelHandler {
 	public void close();
 	
 	public void abort();
+
+	public Object lock();
 
 }
