@@ -64,7 +64,7 @@ public class Filters {
 				matchingFilters.addAll(osList);
 			}
 		}
-		
+
 		BlockingQueue<Integer> ipList = filterMultimap.get(channel.socket().getLocalAddress().getHostAddress());
 		if (ipList != null) {
 			matchingFilters.addAll(ipList);

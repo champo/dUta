@@ -82,7 +82,9 @@ public class L33tFilter implements Filter {
 
 			body = body.replace('e', '3').replace('a', '4').replace('i', '1').replace('o', '0');
 
-			msg.setBody(new DataBuffer(body.getBytes(charset)));
+			DataBuffer putita = new DataBuffer(body.getBytes(charset)); 
+			msg.setBody(putita);
+			msg.getHeader().setField("Content-Length", "" + putita.getWriteIndex());
 
 			return null;
 		}

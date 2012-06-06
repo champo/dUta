@@ -32,7 +32,6 @@ public class Message {
 		}
 
 		this.body = buffer;
-		this.header.setField("Content-Lenght", "" + buffer.getWriteIndex());
 	}
 
 	public int getCurrentBodySize() {

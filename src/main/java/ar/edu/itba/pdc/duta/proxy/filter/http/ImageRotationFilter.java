@@ -92,7 +92,9 @@ public class ImageRotationFilter implements Filter {
 				bytes = baos.toByteArray();
 				baos.close();
 
-				msg.setBody(new DataBuffer(bytes));
+				DataBuffer putita = new DataBuffer(bytes); 
+				msg.setBody(putita);
+				msg.getHeader().setField("Content-Length", "" + putita.getWriteIndex());
 
 			} catch (IOException e) {
 
