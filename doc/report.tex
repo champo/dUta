@@ -449,7 +449,7 @@ Los recursos disponibles son:
     Resulta que si decidiamos implementar \texttt{pipelining} (que era la intencion), tendriamos problemas de perder datos.
     Por eso cambiamos la forma en la que se leia del \texttt{SocketChannel} para que las lecturas se hagan cuando el dueño del \texttt{DataBuffer} pida los datos.
     En contraste con leer inmediamente que llega el evento read.
-    
+
     Una vez implementado esto descubrimos que tiene un alto impacto en la perfomance.
     Dado que no se sabe donde termina un \texttt{header} mientras se lo lee, hay que leer de a bytes hasta encontrar el final.
     Es decir: hacer una system call \texttt{read} de a un byte.
@@ -587,10 +587,38 @@ Los recursos disponibles son:
 
 % }}}
 
+\newpage
+
 \section{Diseño}
 % {{{
-    % put graphics here
+
+	\begin{figure}[ht]
+    		\centering
+    		\includegraphics[width=\textwidth]{img/server_reactor_diagram_pro.png}
+    		\caption{patrón reactor, en donde hay un Server en su propio thread escuchando todos los
+                     sockets y despachando eventos a los Reactors (cada uno en su thread), que se encargan
+                     de manejarlos (delegan el trabajo a un Handler).}
+	\end{figure}
+
+    \vspace{2cm}
+
+	\begin{figure}[ht]
+    		\centering
+    		\includegraphics[width=\textwidth]{img/handler_diagram_pro.png}
+    		\caption{tanto el ClientHandler como el ServerHandler hacen el procesamiento mínimo para
+                     ceder el grueso del trabajo a Operation}
+	\end{figure}
+
+	\begin{figure}[ht]
+    		\centering
+    		\includegraphics[width=\textwidth]{img/buffer_diagram_pro.png}
+    		\caption{el DataBuffer abstrae el uso de un DynamicDataBuffer (datos en RAM) o un
+                     FileDataBuffer (datos en disco), que leen datos de entrada de un
+                     BufferedReadableByteChannel (buffereo del input del SocketChannel)}
+	\end{figure}
 % }}}
+
+\newpage
 
 \section{Deploy}
 % {{{
