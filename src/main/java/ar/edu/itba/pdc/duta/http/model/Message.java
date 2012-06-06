@@ -22,7 +22,7 @@ public class Message {
 	}
 
 	public void setBody(DataBuffer buffer) {
-		
+
 		if (this.body != null) {
 			this.body.release();
 		}
@@ -30,8 +30,9 @@ public class Message {
 		if (buffer != null) {
 			buffer.retain();
 		}
-		
+
 		this.body = buffer;
+		this.header.setField("Content-Lenght", "" + buffer.getWriteIndex());
 	}
 
 	public int getCurrentBodySize() {
