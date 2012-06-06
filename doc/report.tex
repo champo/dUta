@@ -476,10 +476,24 @@ Los recursos disponibles son:
 \section{Posibles extensiones}
 % {{{
     \subsection{Pipelining}
+    Una clara mejora de perfomance es la implementacion de \texttt{pipelining}.
+    Este permite aprovechar mejor una dada conexion.
+    Especialmente si se reusa entre distintos usuarios.
 
     \subsection{Reducir el footprint de memoria}
+    Actualmente, toda la informacion relacionada con un request vive durante todo el transcurso del mismo.
+    Sin embargo, mucha de esta informacion deja de ser necesaria en varios puntos.
+    Seria bueno poder liberar la memoria que contiene esa informacion una vez que esto pasa.
 
     \subsection{Worker threads}
+    El uso de \texttt{worker threads} nos permitiria escalar mejor frente a transformaciones.
+    Al no tenerlos, cada transformacion bloquea un \texttt{reactor} durante todo su transcurso, impactando en la capacidad de \duta de servir otros requests.
+
+    \subsection{Limitaciones}
+    La posible extension mas importante de todas, es remover las actuales limitaciones relacionadas con features HTTP.
+    Varias de estas impactan en el uso que se le puede dar a \duta como proxy.
+
+
 % }}}
 
 \section{Conclusiones}
