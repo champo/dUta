@@ -32,7 +32,6 @@ public class ChannelProxy implements OutputChannel {
 			openChannel();
 		}
 
-		logger.debug("Queueing output: " + buff);
 		channel.queueOutput(buff);
 	}
 

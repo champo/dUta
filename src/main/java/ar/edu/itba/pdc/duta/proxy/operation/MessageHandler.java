@@ -240,7 +240,10 @@ public class MessageHandler {
 
 	private Message writeHeader() {
 
-		logger.debug("Writing header " + msg.getHeader());
+		if (logger.isTraceEnabled()) {
+			logger.trace("Writing header " + msg.getHeader());
+		}
+		
 		try {
 			DataBuffer buffer = new DataBuffer(msg.getHeader().toString().getBytes("ascii"));
 			outputChannel.queueOutput(buffer);
