@@ -45,6 +45,109 @@
 
 \section{Protocolo de administracion}
 
+Para esta seccion, tomamos la sintaxis definida por el RFC 2616 en las secciones 2.1 ``Augmented BNF'' y 2.2 ``Basic Rules''.
+También tomamos las definiciones de las secciones 2.5 ``Numbers'' y 2.6 ``Strings'' del RFC 4627.
+En caso de definiciones conflictivas, se toma con mayor precedencia las definiciones del RFC 4627.
+
+El protocolo de configuración y monitoreo de \duta utiliza HTTP 1.1 como transporte.
+El proxy presenta un servidor HTTP en un puerto especial, este valor es configurable y por defecto es 1337.
+Este servidor esta implementando como un filtro mas del proxy, y por lo tanto, soporta todas las mismas funcionalidades HTTP que el proxy.
+
+Los mensajes que recibe y envía este servidor son del tipo \textit{application/json}, como definido en el RFC 4627.
+También se hara uso de la \textit{Basic Authentication Scheme} definida en el RFC 2617.
+Cualquier recurso o mensaje que no esté detallado en la siguiente sección, producirá un status code de error correspondiente.
+
+\subsection{Nuevo filtro}
+\label{sec:new-filter}
+Para configurar nuevos filtros se debe hacer un request \awesome{POST} al recurso \awesome{/filter} con un mensaje del formato \textit{filter}.
+De ser agregado correctamente, la respuesta tendrá status code 201 y especificará mediante \textit{Location} el recurso asociado al nuevo filtro.
+En caso de encontrar un error con el mensaje enviado, se retornara un status code 400, y de ser posible, un mensaje que indique el error.
+
+\begin{verbatim}
+filter =
+    ("{ 'type': " type ", 'apply': " apply "}") |
+    ("{ 'type': " type ", 'apply': " apply ", 'config': " config "}")
+
+type =
+    "'deny-all'" |
+    "'deny-ip'" |
+    "'deny-url'" |
+    "'deny-type'" |
+    "'deny-size'" |
+    "'l33t'" |
+    "'rotate'"
+
+apply = "[" apply-rules "]"
+
+apply-rules =
+    apply-rule |
+    (apply-rule ", " apply-rules)
+
+apply-rule =
+    "{ 'ip': " string "}" |
+    "{ 'browser': " browser "}" |
+    "{ 'os': " os "}"
+
+\end{verbatim}
+
+\textit{browser} es un string con uno de los siguientes valores:
+APPLE\_MAIL, BOT, CAMINO, CAMINO2, CFNETWORK, CHROME, CHROME\_MOBILE, CHROME10, CHROME11, CHROME12, CHROME13, CHROME14, CHROME15, CHROME16, CHROME17, CHROME18, CHROME19, CHROME8, CHROME9, DOLFIN2, DOWNLOAD, EUDORA, EVOLUTION, FIREFOX, FIREFOX1\_5, FIREFOX10, FIREFOX11, FIREFOX12, FIREFOX13, FIREFOX2, FIREFOX3, FIREFOX3MOBILE, FIREFOX4, FIREFOX5, FIREFOX6, FIREFOX7, FIREFOX8, FIREFOX9, FLOCK, IE, IE10, IE5, IE5\_5, IE6, IE7, IE8, IE9, IEMOBILE6, IEMOBILE7, IEMOBILE9, KONQUEROR, LOTUS\_NOTES, LYNX, MOBILE\_SAFARI, MOZILLA, NETFRONT, OMNIWEB, OPERA, OPERA\_MINI, OPERA10, OPERA9, OUTLOOK, OUTLOOK\_EXPRESS7, OUTLOOK2007, OUTLOOK2010, POCOMAIL, SAFARI, SAFARI4, SAFARI5, SEAMONKEY, SILK, THEBAT, THUNDERBIRD, THUNDERBIRD10, THUNDERBIRD11, THUNDERBIRD12, THUNDERBIRD2, THUNDERBIRD3, THUNDERBIRD6, THUNDERBIRD7, THUNDERBIRD8, UNKNOWN
+
+\textit{os} es un string con uno de los siguientes valores:
+ANDROID, ANDROID1, ANDROID2, ANDROID2\_TABLET, ANDROID3\_TABLET, ANDROID4, ANDROID4\_TABLET, BADA, BLACKBERRY, BLACKBERRY\_TABLET, BLACKBERRY6, BLACKBERRY7, GOOGLE\_TV, IOS, iOS4\_IPHONE, iOS5\_IPHONE, KINDLE, KINDLE2, KINDLE3, LINUX, MAC\_OS, MAC\_OS\_X, MAC\_OS\_X\_IPAD, MAC\_OS\_X\_IPHONE, MAC\_OS\_X\_IPOD, MAEMO, PALM, PSP, ROKU, SERIES40, SONY\_ERICSSON, SUN\_OS, SYMBIAN, SYMBIAN6, SYMBIAN7, SYMBIAN8, SYMBIAN9, UNKNOWN, WEBOS, WII, WINDOWS, WINDOWS\_2000, WINDOWS\_7, WINDOWS\_98, WINDOWS\_MOBILE, WINDOWS\_MOBILE7, WINDOWS\_VISTA, WINDOWS\_XP
+
+
+
+La definición de \textit{host-string} es mixta.
+Debe respetar las reglas de \textit{string} definidas en el RFC 4627 y contener un valor válido según el \textit{host} aceptado por el RFC 2616.
+
+El contenido aceptado por \textit{config} y si debe ser omitido o no, sera determinado por el valor de \textit{type}.
+Los valores \textit{deny-all}, \textit{l33t} y \textit{rotate} no deben incluir \textit{config}.
+\subsubsection{deny-ip}
+\begin{verbatim}
+config = host-string
+\end{verbatim}
+
+\subsubsection{deny-url}
+\begin{verbatim}
+config = uri
+uri = string
+\end{verbatim}
+
+\subsubsection{deny-type}
+\begin{verbatim}
+config = mime
+mime = string
+\end{verbatim}
+
+\subsubsection{deny-size}
+\begin{verbatim}
+config = size
+size = int
+\end{verbatim}
+
+\subsection{Remover filtros}
+Para remover un filtro configurado, se debe enviar un request con método \textit{DELETE} y mensaje vacío al recurso asociado al filtro.
+
+\subsection{Monitoreo}
+Para obtener los valores de monitoreo, existirá un recurso por cada posible categoría.
+Al enviar un request con método \awesome{GET}, el servidor responderá con el valor correspondiente.
+Los mensajes contenidos en las respuestas, todos tendrán el mismo formato, \textit{value}.
+\begin{verbatim}
+value = "{ 'value': " int "} "
+\end{verbatim}
+
+Los recursos disponibles son:
+\begin{itemize}
+    \item \textit{/stats/bytes}
+    \item \textit{/stats/bytes/clients}
+    \item \textit{/stats/bytes/servers}
+    \item \textit{/stats/filter/type} --- Donde \textit{type} es es el definido en \ref{sec:new-filter}.
+    \item \textit{/stats/channels}
+    \item \textit{/stats/channels/clients}
+    \item \textit{/stats/channels/servers}
+\end{itemize}
+
 \section{Problemas encontrados}
 
 \section{Limitaciones}
